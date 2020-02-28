@@ -11,3 +11,10 @@ function parseBlock(arr) {
     let blockParser = new BlockParser(arr);
     return blockParser.getBlockEle();
 }
+
+function parseQuote(arr) {
+
+    let quoteParse = new QuoteParser(arr);
+    return quoteParse.getQuoteEle();
+}
+

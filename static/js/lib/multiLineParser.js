@@ -128,3 +128,31 @@ function BlockParser(arr) {
         return this.blockEle;
     }
 }
+
+function QuoteParser(arr) {
+    this.quoteEle = "";
+    this.quoteEle += "<div class='quote-frame' style='border: 1px solid red'>"
+    this.quoteEle += "<ol>"
+    for (let i = 0; i < arr.length; i++) {
+        let line = arr[i];
+        //去掉缩进的四个空格，并进行转换
+        // line = line.substring(4).replace(/ /g, "&nbsp;");
+        //转义特殊字符
+        // line = escapeCode(line, false);
+
+        //高亮字符串
+        // line = line.replace(/&quot;(.*)&quot;/g, "<span style='color: darkgoldenrod'>\"$1\"</span>")
+        // line = line.replace(/&#39;(.*)&#39;/g, "<span style='color: darkgoldenrod'>\'$1\'</span>")
+
+        line = parseLine(line);
+
+        line = line.replace(/>/g, "<span style='background: darkgray; padding-left: 1em;'></span>")
+        let lineEle = "<li class='quote-line'>" + line + "</li>"
+        this.quoteEle += lineEle;
+    }
+    this.quoteEle += "</ol>"
+    this.quoteEle += "</div>"
+    this.getQuoteEle = function () {
+        return this.quoteEle;
+    }
+}

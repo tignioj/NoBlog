@@ -15,6 +15,9 @@ function markdownParse(str) {
      * @returns {*}
      */
     function wrapMultiCode(currentIndex, fullArray) {
+
+
+
         let multiLineArr = [];
         let multiLineBegin = false;
         let i = currentIndex;
@@ -95,6 +98,44 @@ function markdownParse(str) {
         return i;
     }
 
+    function wrapMultiQuote(currentIndex, fullArray) {
+        let multiQuoteArr = [];
+        let multiQuoteBegin = false;
+        let i = currentIndex;
+
+        let blockReg = /^\s{0,}([>]{1,})(.*)/g;
+
+        for (; i < fullArray.length; i++) {
+
+            let line = fullArray[i];
+            // if (multiBlockBegin === false && line.match(/^```/g)) {
+            if (!multiQuoteBegin && blockReg.test(line)) {
+                multiQuoteBegin = true;
+                multiQuoteArr.push(line);
+                continue;
+            }
+
+            //如果mtarr里面有东西,说明开启了多行代码解析，此时判断是否结束多行
+            if (multiQuoteArr.length > 0) {
+                //空白行退出
+                if (/^\s{0,}$/g.test(line)) {
+                    multiQuoteBegin = false;
+                    multiQuoteArr.push(line);
+                    let quoteEle = parseQuote(multiQuoteArr);
+                    html += quoteEle;
+                    multiQuoteArr = [];
+                    continue;
+                } else {
+                    //否则需要继续添加
+                    multiQuoteArr.push(line);
+                    continue;
+                }
+            }
+            break;
+        }
+        return i;
+    }
+
     for (let i = 0; i < arry.length; i++) {
         //当开启多行时，不因该再进入这里，因为结束也是```
         //     开头，防止结束的时候再次进入这里
@@ -105,11 +146,13 @@ function markdownParse(str) {
 
         //跳过检测到为空行+缩进 block的文本
         i = wrapMutliBlock(i, arry);
+
+        i = wrapMultiQuote(i, arry);
+
         singleLine = arry[i];
 
 
         //非代码需要进行转义 < > &等
-        // singleLine = (singleLine, false);
         singleLine = parseLine(singleLine);
 
         // //单行代码解析``
@@ -206,6 +249,24 @@ function parseLine(str) {
     if (brReg.test(str)) {
         return "<hr/>" + str.substring(str.indexOf("---") + 3);
     }
+
+    // 引用
+    let quoReg = /^\s{0,}([>]{1,})(.*)/g;
+    let qObj = quoReg.exec(str);
+    if (qObj) {
+        let quoteLen = qObj[1].length;
+        let quoteStr = qObj[2];
+        for (let i = 0; i < quoteLen; i++) {
+            quoteStr = "<span style='background-color: darkgray; padding-left: 1em;'></span>" + quoteStr
+        }
+        quoteStr = "<p>" + quoteStr + "</p>";
+        return quoteStr;
+        //计算>的数量
+        // str.indexOf(quotedStr);
+    }
+
+
+    // 纯文本
 
 
     return str;

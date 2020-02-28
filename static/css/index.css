@@ -43,7 +43,7 @@ body {
 .code-multi-frame {
     background-color: ghostwhite;
     /*background-color: whitesmoke;*/
-    margin: 0.1em;
+    margin: 0.3em;
     transition-duration: 100ms;
 }
 .code-multi-frame ol, .block-frame ol {
