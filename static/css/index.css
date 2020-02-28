@@ -15,7 +15,7 @@ body {
     #content {
         /*background-color: #fa6125;*/
         /*border: 1px solid red;*/
-        border-radius: 8px;
+        border-radius: 0.5em;
 
         /*居中技巧*/
         max-width: 1000px;
@@ -69,15 +69,17 @@ body {
 }
 
 
-.block-frame:hover, .code-multi-frame:hover {
+.block-frame:hover, .code-multi-frame:hover, .quote-frame:hover {
     box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3)
 }
 
 
 
 .block-frame li {
-    list-style: none;
     font-family: monospace;
+}
+.block-frame ol {
+    list-style-type: none;
 }
 
 /*.block-frame li :hover {*/
@@ -86,4 +88,27 @@ body {
 
 .header {
     font-weight: bold;
+}
+
+.quote-frame {
+    background-color: #E8EAF6;
+    border-radius: 0.5em;
+}
+
+/*引用框下的ol*/
+.quote-frame ol{
+    list-style-type: none;
+    padding: 1em;
+    overflow: auto;
+}
+/*引用框内的每一行*/
+.quote-line {
+    display: flex;
+}
+.quote-line-filler {
+    /*background: darkgray;*/
+    /*background-color : rgba(0,0,0,0.1);*/
+    border-right: 0.3em solid rgba(0,0,0,0.1);
+    padding-left: 1em;
+    margin-right: 1em;;
 }

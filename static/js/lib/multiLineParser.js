@@ -1,3 +1,4 @@
+
 function MultiLineParser(arr, isMultiLine) {
     if (arr == null) {
         throw "传入的code数组不能为空！"
@@ -131,7 +132,7 @@ function BlockParser(arr) {
 
 function QuoteParser(arr) {
     this.quoteEle = "";
-    this.quoteEle += "<div class='quote-frame' style='border: 1px solid red'>"
+    this.quoteEle += "<div class='quote-frame'>"
     this.quoteEle += "<ol>"
     for (let i = 0; i < arr.length; i++) {
         let line = arr[i];
@@ -144,9 +145,16 @@ function QuoteParser(arr) {
         // line = line.replace(/&quot;(.*)&quot;/g, "<span style='color: darkgoldenrod'>\"$1\"</span>")
         // line = line.replace(/&#39;(.*)&#39;/g, "<span style='color: darkgoldenrod'>\'$1\'</span>")
 
-        line = parseLine(line);
+        let prefixRegex = /\s*[>]*/g;
 
-        line = line.replace(/>/g, "<span style='background: darkgray; padding-left: 1em;'></span>")
+        //把 > 保留，其它的先拿去解析
+        let prefix = prefixRegex.exec(line)[0];
+        let noQuoteLine = line.substring(prefix.length);
+
+        prefix = prefix.replace(/>/g, "<span  class='quote-line-filler'></span>");
+        noQuoteLine = parseLine(noQuoteLine);
+        line = prefix + noQuoteLine;
+
         let lineEle = "<li class='quote-line'>" + line + "</li>"
         this.quoteEle += lineEle;
     }
