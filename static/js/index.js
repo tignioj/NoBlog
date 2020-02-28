@@ -10,6 +10,7 @@
 
 window.onload = function () {
     var md = "./posts/1.md";
+    // var md = "./posts/3.md";
     // var md = "./posts/post.md";
     loadFileString(md, loadDoc);
     loadIndicator()

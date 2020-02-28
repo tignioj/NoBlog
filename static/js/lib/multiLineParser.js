@@ -110,6 +110,7 @@ function BlockParser(arr) {
     this.blockEle += "<div class='block-frame' >"
     this.blockEle += "<ol>"
     //不需要第一行的空行
+    //TODO 解决最后冗余的空行
     for (let i = 1; i < arr.length; i++) {
         let line = arr[i];
         //去掉缩进的四个空格，并进行转换

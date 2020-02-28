@@ -18,7 +18,6 @@ function parseHeader(str) {
             len++;
         }
 
-
     }
     sstr = "<h" + len + " class='header header-" + len+ "'>" + sstr.substring(len) + "</h" + len + ">";
 

@@ -187,10 +187,14 @@ function parseLine(singleLine) {
     // (?!-) 第一个-后面不能有-
     let liReg = /^\s{0,}-(?!-)/g;
     if (liReg.test(singleLine)) {
-        let styles = ["\t&#8226;",  "\t&#9830;","\t&#9674;"]
+        // let styles = ["\t&#8226;",  "\t&#9830;","\t&#9674;"]
+        //字符大区
+        //https://www.cnblogs.com/mengmengi/p/10137167.html
+        //TODO 更换字符
+        let styles = ["&bull;", "&deg;" ,"&diams;",  "&loz;"]
         let spaceLen = singleLine.substring(0, singleLine.indexOf("-")).length;
         let style = styles[(spaceLen / 4) % 4];
-        let retractEle = "<span class='plain-list-indicator' style='padding-left: " + ((spaceLen / 4)) + "em;'>" + style + "</span>"
+        let retractEle = "<span class='plain-list-indicator' style='padding-left: " + ((spaceLen / 4)*20) + "px;'>" + style + "</span>"
         singleLine = "<li class='plain-list'>" + retractEle + singleLine.substring(singleLine.indexOf("-") + 1) + "</li>";
     }
 
