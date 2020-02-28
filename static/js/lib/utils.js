@@ -20,6 +20,14 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min)) + min; //不含最大值，含最小值
 }
 
+function ajaxLoadSuccess() {
+
+}
+
+function ajaxLoadError() {
+
+}
+
 /**
  * 获取文件的字符串
  * @returns {string}

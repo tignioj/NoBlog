@@ -44,25 +44,46 @@ body {
     background-color: ghostwhite;
     /*background-color: whitesmoke;*/
     margin: 0.1em;
+    transition-duration: 100ms;
 }
 .code-multi-frame ol, .block-frame ol {
     overflow: auto;
     padding: 1em;
     margin: 0;
 }
+
+/*多行代码的每行代码*/
 .code-multi-frame-line  {
     list-style: none;
 }
+.code-multi-frame-line:hover {
+    background-color: papayawhip;
+}
 
-
+/*代码框*/
 .block-frame {
-    padding: 10px;
+    padding: 0.1em;
+    margin: 0.2em;
     border-radius: 0.5em;
     background: lightgray;
 }
+
+
+.block-frame:hover, .code-multi-frame:hover {
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3)
+}
+
+
 
 .block-frame li {
     list-style: none;
     font-family: monospace;
 }
 
+/*.block-frame li :hover {*/
+/*    background-color: papayawhip;*/
+/*}*/
+
+.header {
+    font-weight: bold;
+}

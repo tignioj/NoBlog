@@ -20,7 +20,7 @@ function parseHeader(str) {
 
 
     }
-    sstr = "<h" + len + ">" + sstr.substring(len) + "</h" + len + ">";
+    sstr = "<h" + len + " class='header header-" + len+ "'>" + sstr.substring(len) + "</h" + len + ">";
 
     return sstr;
 }
