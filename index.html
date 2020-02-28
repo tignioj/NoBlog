@@ -3,18 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <title>首页</title>
-    <style>
-        #app {
-            padding: 5px;
-        }
-    </style>
+    <link type="text/css" rel="stylesheet" href="./static/css/index.css"/>
 </head>
 <body>
 <div id="app">
+    <div id="content"></div>
+    <div id="indicator"></div>
 </div>
+
+<!--实体类-->
+<script src="static/js/lib/multiLineParser.js"></script>
+<script src="static/js/entity/markedHtml.js"></script>
+
+<!--工具类-->
 <script src="./static/js/lib/utils.js"></script>
+
+<!--依赖库-->
 <script src="./static/js/lib/parseHeader.js"></script>
-<script src="./static/js/lib/parseCode.js"></script>
+<script src="static/js/lib/parseMultiLineArr.js"></script>
 <script src="./static/js/lib/higlithgCode.js"></script>
 <script src="./static/js/lib/markdown-praser.js"></script>
 <script src="./static/js/index.js"></script>

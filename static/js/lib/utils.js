@@ -19,16 +19,20 @@ function getRandomInt(min, max) {
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min)) + min; //不含最大值，含最小值
 }
+
 /**
  * 获取文件的字符串
  * @returns {string}
  */
-function getFileString(url) {
-
+function loadFileString(url, callback) {
     var xhr = getXMLHttp();
-    xhr.open("GET", url, false);
+    xhr.open("GET", url);
     xhr.send();
-    return xhr.responseText
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            callback(xhr.responseText);
+        }
+    }
 }
 
 function getXMLHttp() {

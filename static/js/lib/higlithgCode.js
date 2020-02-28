@@ -5,23 +5,20 @@
  * @param language 语言
  */
 function higlightCode(rawCode, language) {
-    if (language == null || language == "") {
+    if (language == null || language === "") {
         language = "default";
     }
     language = language.toLowerCase();
 
-
+//TODO 编写高亮css，添加到code组件
     switch (language) {
         case "java":
             // return parseJava(rawCode);
             return parseDefault(rawCode);
-            break;
         case "default":
             return parseDefault(rawCode);
-            break;
         default:
             return parseDefault(rawCode);
-
     }
 }
 
@@ -29,22 +26,22 @@ function higlightCode(rawCode, language) {
 /**
  * 获取随机颜色
  */
-var colors = ["red", "blue", "green", "deeppink", "purple"]
+let colors = ["red", "blue", "green", "deeppink", "purple"];
 
 function getRanDomColor() {
     return colors[getRandomInt(0, colors.length)];
 }
 
 function parseDefault(rawCode) {
-    return "<span style='color: " + getRanDomColor() + ";font-weight: bold'>" + rawCode + "</span>";
+    return "<span style='color: " + getRanDomColor() + ";'>" + rawCode + "</span>";
 }
 
 function parseJava(rawCode) {
-    var colors = ['red', 'blue', 'green', 'purple', 'deeppink']
+    var colors = ['red', 'blue', 'green', 'purple', 'deeppink'];
     var index = 0;
     // rawCode = "<span style='color: " + colors[index++] + "'>" + rawCode;
     // rawCode = rawCode.replace(/\./g, "</span>.<span style='color: blue'>")
-    var pat = /[\. ]/g
+    var pat = /[\. ]/g;
     var obj = pat.exec(rawCode);
     var nCode = "";
     var preIndex = 0;
@@ -64,10 +61,10 @@ function parseJava(rawCode) {
 }
 
 
-//转义xml
-var escapeTest = /[&<>"']/;
-var escapeReplace = /[&<>"']/g;
-var replacements = {
+//转义特殊字符以免被浏览器解析
+escapeCode.escapeTest = /[&<>"']/;
+escapeCode.escapeReplace = /[&<>"']/g;
+escapeCode.replacements = {
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
@@ -75,20 +72,20 @@ var replacements = {
     "'": '&#39;'
 };
 
-var escapeTestNoEncode = /[<>"']|&(?!#?\w+;)/;
-var escapeReplaceNoEncode = /[<>"']|&(?!#?\w+;)/g;
+escapeCode.escapeTestNoEncode = /[<>"']|&(?!#?\w+;)/;
+escapeCode.escapeReplaceNoEncode = /[<>"']|&(?!#?\w+;)/g;
 
-function escape(html, encode) {
+function escapeCode(html, encode) {
     if (encode) {
-        if (escapeTest.test(html)) {
-            return html.replace(escapeReplace, function (ch) {
-                return replacements[ch];
+        if (escapeCode.escapeTest.test(html)) {
+            return html.replace(escapeCode.escapeReplace, function (ch) {
+                return escapeCode.replacements[ch];
             });
         }
     } else {
-        if (escapeTestNoEncode.test(html)) {
-            return html.replace(escapeReplaceNoEncode, function (ch) {
-                return replacements[ch];
+        if (escapeCode.escapeTestNoEncode.test(html)) {
+            return html.replace(escapeCode.escapeReplaceNoEncode, function (ch) {
+                return escapeCode.replacements[ch];
             });
         }
     }

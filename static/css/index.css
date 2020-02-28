@@ -1,0 +1,68 @@
+body {
+    /*background-color: antiquewhite;*/
+}
+#app {
+}
+
+/*markdonw解析后显示的地方*/
+#content {
+    padding: 20px;
+}
+
+/*当屏幕段都大于1024执行的css*/
+@media only screen and (min-width: 1024px) {
+    /*markdown区域*/
+    #content {
+        /*background-color: #fa6125;*/
+        /*border: 1px solid red;*/
+        border-radius: 8px;
+
+        /*居中技巧*/
+        max-width: 1000px;
+        width: 80%;
+        margin: auto;
+    }
+}
+
+/*单行代码的外层div*/
+.code-single-frame {
+    padding: 0.1em;
+    margin: 0.1em;
+    background-color: whitesmoke;
+}
+
+/*单行代码，多行代码都有*/
+.code {
+    border-radius: 0.5em;
+    border: 1px solid rgba(0,0,0,0.1);
+    /*这个字体适合代码*/
+    font-family: monospace;
+}
+
+/*多行代码的包裹层div*/
+.code-multi-frame {
+    background-color: ghostwhite;
+    /*background-color: whitesmoke;*/
+    margin: 0.1em;
+}
+.code-multi-frame ol, .block-frame ol {
+    overflow: auto;
+    padding: 1em;
+    margin: 0;
+}
+.code-multi-frame-line  {
+    list-style: none;
+}
+
+
+.block-frame {
+    padding: 10px;
+    border-radius: 0.5em;
+    background: lightgray;
+}
+
+.block-frame li {
+    list-style: none;
+    font-family: monospace;
+}
+
