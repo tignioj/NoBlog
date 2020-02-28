@@ -17,7 +17,6 @@ function markdownParse(str) {
     function wrapMultiCode(currentIndex, fullArray) {
 
 
-
         let multiLineArr = [];
         let multiLineBegin = false;
         let i = currentIndex;
@@ -54,22 +53,28 @@ function markdownParse(str) {
 
     /**
      * 封装多行block
+     * 连续两行空白
      * @param currentIndex
      * @param fullArray
      */
-
     function wrapMutliBlock(currentIndex, fullArray) {
         let multiBlockArr = [];
         let multiBlockBegin = false;
         let i = currentIndex;
 
-        let blockReg = /\s{4,}/g;
+        let emptyLineReg = /^\s*$/g;
+        // let hasSpaceLineInHeaderReg = /^\s{4,}.[^ ]/g;
+        /**
+         * 开头必须有四个空格以上，后面必须跟着一个任意字符（处理空格之外)
+         * @type {RegExp}
+         */
+        let hasSpaceFirstWithAnyContent = /^\s{4,}.[^ ]/g;
 
         for (; i < fullArray.length; i++) {
 
             let line = fullArray[i];
             // if (multiBlockBegin === false && line.match(/^```/g)) {
-            if (!multiBlockBegin && blockReg.test(fullArray[i]) && blockReg.test(fullArray[i + 1])) {
+            if (!multiBlockBegin && emptyLineReg.test(fullArray[i]) && hasSpaceFirstWithAnyContent.test(fullArray[i + 1])) {
                 multiBlockBegin = true;
                 multiBlockArr.push(line);
                 continue;
@@ -77,15 +82,14 @@ function markdownParse(str) {
 
             //如果mtarr里面有东西,说明开启了多行代码解析，此时判断是否结束多行
             if (multiBlockArr.length > 0) {
-                //如果在开启了代码解析的情况下还检测到了```,则应该结束了
-                // if (blockReg.test(line) && blockReg.test(fullArray[i+1])) {
-                if (/^\s{0,}$/g.test(line)) {
+                //如果开头前4个位置有字符（而不是空格), 而且不是空行 就结束
+                let randomCharButNotEmptyReg = /[^ ]/g;
+                let charIndex = line.search(randomCharButNotEmptyReg);
+                if (charIndex<4 && line.trim().length !== 0) {
                     multiBlockBegin = false;
-                    multiBlockArr.push(line);
-                    // html += parseMultiLineArr(multiBlockArr, true);
                     html += parseBlock(multiBlockArr);
                     multiBlockArr = [];
-                    continue;
+                    break;
                 } else {
                     //否则需要继续添加
                     multiBlockArr.push(line);
@@ -150,7 +154,6 @@ function markdownParse(str) {
         i = wrapMultiQuote(i, arry);
 
 
-
         singleLine = arry[i];
 
 
@@ -184,7 +187,11 @@ function parseLine(singleLine) {
     // (?!-) 第一个-后面不能有-
     let liReg = /^\s{0,}-(?!-)/g;
     if (liReg.test(singleLine)) {
-        singleLine = "<li>" + singleLine.substring(singleLine.indexOf("-") + 1) + "</li>";
+        let styles = ["\t&#8226;",  "\t&#9830;","\t&#9674;"]
+        let spaceLen = singleLine.substring(0, singleLine.indexOf("-")).length;
+        let style = styles[(spaceLen / 4) % 4];
+        let retractEle = "<span class='plain-list-indicator' style='padding-left: " + ((spaceLen / 4)) + "em;'>" + style + "</span>"
+        singleLine = "<li class='plain-list'>" + retractEle + singleLine.substring(singleLine.indexOf("-") + 1) + "</li>";
     }
 
     //图像
@@ -195,14 +202,14 @@ function parseLine(singleLine) {
         let altText = obj[1];
         let url = obj[2];
         let imgEle = "<span>" + "<img style=\"width: 100%\" alt=\"" + altText + "\"src=" + url.trim() + " />" + "</span>"
-        singleLine =  imgEle;
+        singleLine = imgEle;
     }
 
 
     // br
     let brReg = /^\s{0,}---/g;
     if (brReg.test(singleLine)) {
-        singleLine =  "<hr/>" + singleLine.substring(singleLine.indexOf("---") + 3);
+        singleLine = "<hr/>" + singleLine.substring(singleLine.indexOf("---") + 3);
     }
 
     // 引用
@@ -219,7 +226,6 @@ function parseLine(singleLine) {
     //     //计算>的数量
     //     // str.indexOf(quotedStr);
     // }
-
 
 
     //链接[]()
@@ -267,7 +273,15 @@ function parseLine(singleLine) {
         singleLine = parseMultiLineArr([singleLine], false);
     }
 
-
+    /**
+     * 没有被标签封装，说明是纯文本
+     * @type {RegExp}
+     */
+    let plainTextReg = /^\s*</g;
+    let temLine = singleLine.trim();
+    if (temLine.length > 0 && !plainTextReg.test(temLine)) {
+        singleLine = "<p class='plain-text'>" + singleLine + "</p>";
+    }
 
     return singleLine;
 }

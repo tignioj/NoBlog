@@ -1,4 +1,3 @@
-
 function MultiLineParser(arr, isMultiLine) {
     if (arr == null) {
         throw "传入的code数组不能为空！"
@@ -110,7 +109,8 @@ function BlockParser(arr) {
     this.blockEle = "";
     this.blockEle += "<div class='block-frame' >"
     this.blockEle += "<ol>"
-    for (let i = 0; i < arr.length; i++) {
+    //不需要第一行的空行
+    for (let i = 1; i < arr.length; i++) {
         let line = arr[i];
         //去掉缩进的四个空格，并进行转换
         line = line.substring(4).replace(/ /g, "&nbsp;");
@@ -120,7 +120,13 @@ function BlockParser(arr) {
         //高亮字符串
         line = line.replace(/&quot;(.*)&quot;/g, "<span style='color: darkgoldenrod'>\"$1\"</span>")
         line = line.replace(/&#39;(.*)&#39;/g, "<span style='color: darkgoldenrod'>\'$1\'</span>")
-        let lineEle = "<li class='block-line'>" + line + "</li>"
+        //显示空行的li标签
+        let lnELe = "";
+        if (line.trim().length === 0) {
+            lineEle = "<li class='block-line' style='visibility: hidden'>&nbsp</li>";
+        } else {
+            lineEle = "<li class='block-line'>" + line + "</li>";
+        }
         this.blockEle += lineEle;
     }
     this.blockEle += "</ol>"
