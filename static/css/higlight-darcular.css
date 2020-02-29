@@ -1,0 +1,89 @@
+
+/**
+idea darcular 风格的代码高亮
+ */
+
+
+/*单行代码，多行代码都有*/
+.code {
+    border-radius: 0.5em;
+    border: 1px solid rgba(0,0,0,0.1);
+    /*这个字体适合代码*/
+    font-family: monospace;
+}
+
+/*多行代码的包裹层div*/
+.code-multi-frame {
+    background-color: #2b2b2b;
+    /*color: whitesmoke;*/
+    /*background-color: ghostwhite;*/
+    /*background-color: whitesmoke;*/
+    margin: 0.3em;
+    transition-duration: 100ms;
+    color: #bababa;
+}
+
+.code-multi-frame:hover {
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+.code-multi-frame ol {
+    overflow: auto;
+    padding: 1em;
+    margin: 0;
+}
+
+
+/*多行代码的每行代码*/
+.code-multi-frame-line  {
+    list-style: none;
+}
+.code-multi-frame-line:hover {
+    /*background-color: papayawhip;*/
+    background-color: darkslategray;
+}
+
+
+
+/*注解，以@开头*/
+.hl-code-annotation {
+    /*color: cadetblue;*/
+    color: #bbb529;
+}
+
+/*java的关键字*/
+.hl-code-keyword {
+    color: #cc7832
+}
+
+
+/*java的方法*/
+.hl-code-function {
+    color: #e8be6a;
+}
+
+/*字符串*/
+.hl-code-string {
+    color: #6a8759;
+}
+
+/*java属性*/
+.hl-code-field {
+    color: #8775a9;
+}
+
+.hl-code-one-line-comment {
+    color: #808080;
+}
+
+
+
+
+/*============================单行代码====================*/
+
+/*单行代码的外层div*/
+.code-single-frame {
+    padding: 0.1em;
+    margin: 0.1em;
+    background-color: whitesmoke;
+}

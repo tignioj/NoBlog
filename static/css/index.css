@@ -1,5 +1,6 @@
 body {
-    /*background-color: antiquewhite;*/
+    /*background-color: #E8EAF6;*/
+    font-family: Roboto, Noto, Helvetica, Arial, sans-serif
 }
 
 /*清除默认样式*/
@@ -12,7 +13,8 @@ h1,h2,h3,h4,h5,p {
 
 /*markdonw解析后显示的地方*/
 #content {
-    padding: 20px;
+    padding: 50px;
+    background-color: ghostwhite;
 }
 
 /*当屏幕段都大于1024执行的css*/
@@ -25,7 +27,7 @@ h1,h2,h3,h4,h5,p {
 
         /*居中技巧*/
         max-width: 1000px;
-        width: 80%;
+        width: 60%;
         margin: auto;
     }
 }
@@ -39,43 +41,16 @@ h1,h2,h3,h4,h5,p {
 
 
 
-/*单行代码的外层div*/
-.code-single-frame {
-    padding: 0.1em;
-    margin: 0.1em;
-    background-color: whitesmoke;
-}
-
-/*单行代码，多行代码都有*/
-.code {
-    border-radius: 0.5em;
-    border: 1px solid rgba(0,0,0,0.1);
-    /*这个字体适合代码*/
-    font-family: monospace;
-}
-
-/*多行代码的包裹层div*/
-.code-multi-frame {
-    background-color: ghostwhite;
-    /*background-color: whitesmoke;*/
-    margin: 0.3em;
-    transition-duration: 100ms;
-}
-.code-multi-frame ol, .block-frame ol {
+/*缩进框下的ol*/
+ .block-frame ol {
     overflow: auto;
     padding: 1em;
     margin: 0;
 }
 
-/*多行代码的每行代码*/
-.code-multi-frame-line  {
-    list-style: none;
-}
-.code-multi-frame-line:hover {
-    background-color: papayawhip;
-}
 
-/*代码框*/
+
+/*缩进框*/
 .block-frame {
     padding: 0.1em;
     margin: 0.2em;
@@ -84,10 +59,9 @@ h1,h2,h3,h4,h5,p {
 }
 
 
-.block-frame:hover, .code-multi-frame:hover, .quote-frame:hover {
-    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3)
+.block-frame:hover {
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
 }
-
 
 
 .block-frame li {
@@ -106,7 +80,7 @@ h1,h2,h3,h4,h5,p {
 }
 
 .quote-frame {
-    background-color: #E8EAF6;
+    /*background-color: #E8EAF6;*/
     border-radius: 0.5em;
 }
 

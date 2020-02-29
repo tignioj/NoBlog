@@ -215,7 +215,6 @@ function markdownParse(str) {
     for (let i = 0; i < arry.length; i++) {
         //当开启多行时，不因该再进入这里，因为结束也是```
         //     开头，防止结束的时候再次进入这里
-        //TODO xml出现问题,因为它被HTML解析了...
 
         //跳过检测到为多行代码格式的文本
         i = wrapMultiCode(i, arry);
@@ -238,9 +237,8 @@ function markdownParse(str) {
 
 
     //解析完成，返回MarkedHtml对象
-    let markedHtml = new MarkedHtml(html);
     // markedHtml.indicator = indicator;
-    return markedHtml;
+    return new MarkedHtml(html);
 }
 
 
@@ -263,21 +261,22 @@ function parseLine(singleLine) {
         //字符大区
         //https://www.cnblogs.com/mengmengi/p/10137167.html
         //TODO 更换字符
-        let styles = ["&bull;", "&deg;", "&diams;", "&loz;"]
+        let styles = ["&bull;", "&deg;", "&diams;", "&loz;"];
         let spaceLen = singleLine.substring(0, singleLine.indexOf("-")).length;
         let style = styles[(spaceLen / 4) % 4];
-        let retractEle = "<span class='plain-list-indicator' style='padding-left: " + ((spaceLen / 4) * 20) + "px;'>" + style + "</span>"
+        let retractEle = "<span class='plain-list-indicator' style='padding-left: " + ((spaceLen / 4) * 20) + "px;'>" + style + "</span>";
         singleLine = "<li class='plain-list'>" + retractEle + singleLine.substring(singleLine.indexOf("-") + 1) + "</li>";
     }
 
     //图像
     // let teststr = "![abc](http://img.wszjl.com/images/background/jpg/22.jpg)";
-    let reg = /!\[(.*)\]\((.*)\)/g
+    let reg = /!\[(.*)\]\((.*)\)/g;
     let obj = reg.exec(singleLine.trim());
     if (obj != null) {
         let altText = obj[1];
         let url = obj[2];
-        let imgEle = "<span>" + "<img style=\"width: 100%\" alt=\"" + altText + "\"src=" + url.trim() + " />" + "</span>"
+        let imgEle = "<span>" + "<img style=\"width: 100%\" alt=\"" + altText + "\" src=" + url.trim() + " />" + "</span>";
+
         singleLine = imgEle;
     }
 
@@ -306,11 +305,11 @@ function parseLine(singleLine) {
 
     //链接[]()
     let lnReg = /(.*)\[(.*)\]\((.*)\)(.*)/g;
-    singleLine = singleLine.replace(lnReg, "$1<a href=\'$3\' >$2</a>$4")
+    singleLine = singleLine.replace(lnReg, "$1<a href=\'$3\' >$2</a>$4");
 
     //高亮==
     let hlReg = /==(.*)==/g;
-    singleLine = singleLine.replace(hlReg, "<span style='background: yellow'>$1</span>")
+    singleLine = singleLine.replace(hlReg, "<span style='background: yellow'>$1</span>");
 
     //斜体*
     //正则的断言

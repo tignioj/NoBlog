@@ -9,7 +9,7 @@
  */
 
 window.onload = function () {
-    var md = "./posts/1.md";
+    let md = "./posts/1.md";
     // var md = "./posts/2.md";
     // var md = "./posts/3.md";
     // var md = "./posts/post.md";

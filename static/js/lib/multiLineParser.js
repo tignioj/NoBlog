@@ -26,7 +26,7 @@ function MultiLineParser(arr, isMultiLine) {
 
     this.getType = function () {
         return this.type;
-    }
+    };
 
     /**
      * 初始化代码块
@@ -35,24 +35,25 @@ function MultiLineParser(arr, isMultiLine) {
         isMultiLine ? initMultiLineCode.call(this) : initSingleLine.call(this);
 
         function initMultiLineCode() {
-            // this.codeEle = "<div class='code code-multi-frame' style='border: 1px solid black; border-radius: 4px; padding: 20px; overflow: auto'>";
-            this.codeEle = "<div class='code code-multi-frame''>";
+            //pre标签可以保留空格
+            this.codeEle = "<pre>";
+            this.codeEle += "<div class='code code-multi-frame''>";
             this.codeEle += "<ol>"
             //如果是多行代码去掉第一行和最后一行，因为它们都包含了```
             for (let i = 1; i < this.codeArr.length - 1; i++) {
                 let singleCodeLine = this.codeArr[i];
-                singleCodeLine = escapeCode(singleCodeLine, false);
-                //代码缩进把空格替换成 &nbsp;
-                singleCodeLine = singleCodeLine.replace(/ /g, "&nbsp;")
-                // singleCodeLine = singleCodeLine.replace(/ /g, "&nbsp;&nbsp;")
+
                 //代码高亮
                 singleCodeLine = higlightCode(singleCodeLine, this.getType());
+
+                // singleCodeLine = escapeCode(singleCodeLine, false);
 
                 let singleCodeLineEle = "<li class='code-multi-frame-line'>" + singleCodeLine + "</li>"
                 this.codeEle += singleCodeLineEle;
             }
             this.codeEle += "</ol>"
             this.codeEle += "</div>"
+            this.codeEle += "</pre>";
         }
 
         /**
@@ -107,21 +108,23 @@ function MultiLineParser(arr, isMultiLine) {
 
 function BlockParser(arr) {
     this.blockEle = "";
-    this.blockEle += "<div class='block-frame' >"
-    this.blockEle += "<ol>"
+    this.blockEle += "<div class='block-frame' >";
+    this.blockEle += "<ol>";
     //不需要第一行的空行
     for (let i = 1; i < arr.length; i++) {
         let line = arr[i];
         //去掉缩进的四个空格，并进行转换
         line = line.substring(4).replace(/ /g, "&nbsp;");
+
+        //高亮字符串
+        // line = line.replace(/&quot;(.*)&quot;/g, "<span style='color: darkgoldenrod'>\"$1\"</span>")
+        // line = line.replace(/&#39;(.*)&#39;/g, "<span style='color: darkgoldenrod'>\'$1\'</span>")
+        // line = higlightCode(line, "default");
+
         //转义特殊字符
         line = escapeCode(line, false);
 
-        //高亮字符串
-        line = line.replace(/&quot;(.*)&quot;/g, "<span style='color: darkgoldenrod'>\"$1\"</span>")
-        line = line.replace(/&#39;(.*)&#39;/g, "<span style='color: darkgoldenrod'>\'$1\'</span>")
         //显示空行的li标签
-        let lnELe = "";
         if (line.trim().length === 0) {
             lineEle = "<li class='block-line' style='visibility: hidden'>&nbsp</li>";
         } else {
@@ -129,8 +132,8 @@ function BlockParser(arr) {
         }
         this.blockEle += lineEle;
     }
-    this.blockEle += "</ol>"
-    this.blockEle += "</div>"
+    this.blockEle += "</ol>";
+    this.blockEle += "</div>";
     this.getBlockEle = function () {
         return this.blockEle;
     }
@@ -138,8 +141,8 @@ function BlockParser(arr) {
 
 function QuoteParser(arr) {
     this.quoteEle = "";
-    this.quoteEle += "<div class='quote-frame'>"
-    this.quoteEle += "<ol>"
+    this.quoteEle += "<div class='quote-frame'>";
+    this.quoteEle += "<ol>";
     for (let i = 0; i < arr.length; i++) {
         let line = arr[i];
         //去掉缩进的四个空格，并进行转换
@@ -161,11 +164,11 @@ function QuoteParser(arr) {
         noQuoteLine = parseLine(noQuoteLine);
         line = prefix + noQuoteLine;
 
-        let lineEle = "<li class='quote-line'>" + line + "</li>"
+        let lineEle = "<li class='quote-line'>" + line + "</li>";
         this.quoteEle += lineEle;
     }
-    this.quoteEle += "</ol>"
-    this.quoteEle += "</div>"
+    this.quoteEle += "</ol>";
+    this.quoteEle += "</div>";
     this.getQuoteEle = function () {
         return this.quoteEle;
     }
