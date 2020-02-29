@@ -62,43 +62,115 @@ function markdownParse(str) {
         let multiBlockBegin = false;
         let i = currentIndex;
 
-        let emptyLineReg = /^\s*$/g;
-        // let hasSpaceLineInHeaderReg = /^\s{4,}.[^ ]/g;
         /**
-         * 开头必须有四个空格以上，后面必须跟着一个任意字符（处理空格之外)
-         * @type {RegExp}
+         * 判断是否为结束行
+         * 判断方法：
+         *  当前行首四个字符是空格以外的其它字符（也就是没有Tab缩进
+         *  但是无法做到一个正则可以判断首行前面四个字符是否有空格以外的字符，因此需要转换思路
+         *      1. 利用search方法搜索空格以外的字符[^ ]，搜到的任意一字符如果其位置<4,说明它是结束行
+         *      2. 需要注意的是，这个方法搜索到空字符是返-1
+         *
+         * @param line
          */
-        let hasSpaceFirstWithAnyContent = /^\s{4,}.[^ ]/g;
+        function isEndingLineOfBlock(line) {
+            let randomCharButNotEmptyReg = /[^ ]/g;
+            let charIndex = line.search(randomCharButNotEmptyReg);
+            if (charIndex < 4 && line.trim().length !== 0) {
+                // if (charIndex < 4 && line.trim().length !== 0) {
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * 判断是否为结束行，需要检测多行
+         * 检测方法：
+         *  当前行为空行
+         *  下一行不是空行，而且必须有一个Tab（即四个空格在开头）
+         * @param fullArray
+         * @param i
+         * @returns {boolean|boolean}
+         */
+        function isStartLineOfBlock(fullArray, i) {
+            //检测是否为空行
+            let emptyLineReg = /^\s*$/g;
+            /**
+             * 开头必须有四个空格以上，后面必须跟着一个任意字符（处理空格之外)
+             * @type {RegExp}
+             */
+            let hasSpaceFirstWithAnyContent = /^\s{4,}.[^ ]/g;
+            return  emptyLineReg.test(fullArray[i]) && hasSpaceFirstWithAnyContent.test(fullArray[i + 1])
+        }
+
+        //处理结束冗余空行的计数器
+        let emptyLineCountOfEnding = 0;
+
 
         for (; i < fullArray.length; i++) {
-
             let line = fullArray[i];
-            // if (multiBlockBegin === false && line.match(/^```/g)) {
-            if (!multiBlockBegin && emptyLineReg.test(fullArray[i]) && hasSpaceFirstWithAnyContent.test(fullArray[i + 1])) {
+
+            // 如果还么有开始进入板块， 则从当前行开始判断是否为开始行
+            if (!multiBlockBegin && isStartLineOfBlock(fullArray, i)) {
                 multiBlockBegin = true;
                 multiBlockArr.push(line);
                 continue;
             }
 
-            //如果mtarr里面有东西,说明开启了多行代码解析，此时判断是否结束多行
+            //如果mtarr里面有东西,说明开启了多行代码解析
             if (multiBlockArr.length > 0) {
                 //如果开头前4个位置有字符（而不是空格), 而且不是空行 就结束
-                let randomCharButNotEmptyReg = /[^ ]/g;
-                let charIndex = line.search(randomCharButNotEmptyReg);
-                if (charIndex<4 && line.trim().length !== 0) {
+                /**
+                 * 判断结束板块的方法：
+                 * 1. 判断当前行最前面四个字符是否有空格以外的字符，
+                 * 如果有，而且不是空行，则说明结束板块了
+                 * 比如
+                 * 第1行        |     a
+                 * 第2行        |  ab
+                 * 第3行        |(这里没有空格,是空行)
+                 * 这里第1行前面四个字符是空白，但是不是空行，因为后面有a，所以不结束
+                 * 第2行前面四个字符中，第三个字符是a，所以应该结束
+                 * 第3行完全空行，前面也没有字符,也没有空格，所以不该结束
+                 */
+                if (isEndingLineOfBlock(line)) {
                     multiBlockBegin = false;
+                    //清除冗余行
+                    for (let j = 0; j < emptyLineCountOfEnding; j++) {
+                        multiBlockArr.pop();
+                    }
                     html += parseBlock(multiBlockArr);
                     multiBlockArr = [];
                     break;
-                } else {
-                    //否则需要继续添加
-                    multiBlockArr.push(line);
-                    continue;
                 }
+
+
+                /**
+                 * 除去结尾冗余空行的一些准备
+                 * 当检测到空行，就开始计数
+                 * 如果不是空行，判断是不是结束了
+                 * 如果结束了，就保存技术
+                 * 如果还么结束，则置为0
+                 * 最后需要在block结束方法处调用pop()方法清除冗余行
+                 * @type {number}
+                 */
+                if (line.trim().length === 0) {
+                    emptyLineCountOfEnding++;
+                } else {
+                    //如果不是结束行，则置空
+                    if (!isEndingLineOfBlock(line)) {
+                        emptyLineCountOfEnding = 0;
+                    }
+                }
+
+                //逐行添加到待处理的block数组中
+                multiBlockArr.push(line);
+                continue;
             }
 
+            // 这种情况就是当前未解析到block,直接结束循环
             break;
         }
+
+
         return i;
     }
 
@@ -191,10 +263,10 @@ function parseLine(singleLine) {
         //字符大区
         //https://www.cnblogs.com/mengmengi/p/10137167.html
         //TODO 更换字符
-        let styles = ["&bull;", "&deg;" ,"&diams;",  "&loz;"]
+        let styles = ["&bull;", "&deg;", "&diams;", "&loz;"]
         let spaceLen = singleLine.substring(0, singleLine.indexOf("-")).length;
         let style = styles[(spaceLen / 4) % 4];
-        let retractEle = "<span class='plain-list-indicator' style='padding-left: " + ((spaceLen / 4)*20) + "px;'>" + style + "</span>"
+        let retractEle = "<span class='plain-list-indicator' style='padding-left: " + ((spaceLen / 4) * 20) + "px;'>" + style + "</span>"
         singleLine = "<li class='plain-list'>" + retractEle + singleLine.substring(singleLine.indexOf("-") + 1) + "</li>";
     }
 

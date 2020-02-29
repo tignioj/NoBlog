@@ -10,6 +10,7 @@
 
 window.onload = function () {
     var md = "./posts/1.md";
+    // var md = "./posts/2.md";
     // var md = "./posts/3.md";
     // var md = "./posts/post.md";
     loadFileString(md, loadDoc);
@@ -17,7 +18,7 @@ window.onload = function () {
 };
 
 function loadDoc(str) {
-    var markedHtml = markdownParse(str);
+    let markedHtml = markdownParse(str);
     document.getElementById("content").innerHTML = markedHtml.html;
 }
 
