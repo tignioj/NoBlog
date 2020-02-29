@@ -122,6 +122,16 @@ function higlightCode(rawCode, language) {
         nCode += indentEle;
 
 
+        //高亮单行注释
+        let singleCommentReg = /\/\/(.*)/g;
+        if (singleCommentReg.test(rawCode)) {
+            nCode += rawCode.trim();
+            nCode = nCode.replace(singleCommentReg, "<span class='hl-code-one-line-comment'>//$1</span>");
+            return (nCode == null || nCode.length === 0) ? rawCode : nCode;
+        }
+
+        //TODO 高亮多行注释
+
 
         let arr = rawCode.split(/\s+/g);
 
@@ -137,7 +147,6 @@ function higlightCode(rawCode, language) {
             if (keywords.indexOf(word) > -1) {
                 word = "<span class='hl-code-keyword'>" + word + "</span>";
             }
-
 
 
             //高亮方法
@@ -157,25 +166,7 @@ function higlightCode(rawCode, language) {
             }
 
 
-            //高亮字符串, 这种字符串是里面没有空格的字符串，所以可以直接识别出来
-            // if ((firstChar === "\"" && endChar === "\"") || (firstChar === "\'" && endChar === "\'")) {
-            //     word = "<span class='hl-code-string'>" + word + "</span>"
-            // }
-            //
-            // //拼接字符串, 这种字符串里面有空格, 需要另外处理
-            // //如果没开始拼接，且开头为", 结束不为;
-            // if (!isStartString && firstChar === "\"" && operators.indexOf(endChar)) {
-            //     isStartString = true;
-            //     stringArr.push(word);
-            //     continue;
-            // }
-            //
-            // //说明结束字符串
-            // if (firstChar !== "\"" && endChar === "\"") {
-            //
-            // }
-            //
-            if (i < arr.length-1) {
+            if (i < arr.length - 1) {
                 word += " ";
             }
             nCode += word;
@@ -185,37 +176,20 @@ function higlightCode(rawCode, language) {
         let strReg = /"(.*)"/g;
         nCode = nCode.replace(strReg, "<span class='hl-code-string'>\"$1\"</span>");
 
-        //以点分割
-        let dotArr = nCode.split(".");
-        for (let i = 0; i < dotArr.length; i++) {
-
-        }
 
         //高亮this
-        // let thisReg = /this\.(.*)\./g
-        // let thisReg = /this\.(.*) ?/g
-        // let thisReg = /this\.(.*) ?/g
-        let thisReg = /this\.([\w]+)/g;
-        // let thisArr = nCode.split();
-        nCode = nCode.replace(thisReg, "<span  class='hl-code-keyword' >this</span>.<span class='hl-code-field'>$1</span>");
+        //因为function已经在前面解析过，为了防止再次解析到方法（比如this.hello()), 需要进行检测
+        let thisFieldReg = /this\.([\w]+)/g;
+        let thisFunReg = /this\.([\w]+)\(/g;
+        let trimHtmlReg = /<[^>]+>/g;
+        let trimedCode = nCode.replace(trimHtmlReg, "");
+        //如果不是方法, 则需要处理
+        if (!thisFunReg.test(trimedCode)) {
+            nCode = nCode.replace(thisFieldReg, "<span  class='hl-code-keyword' >this</span>.<span class='hl-code-field'>$1</span>");
+        } else {
+            nCode = nCode.replace(thisFieldReg, "<span  class='hl-code-keyword' >this</span>.$1");
+        }
 
-
-        //高亮单行注释
-        let singleCommentReg = /\/\/(.*)/g;
-        nCode = nCode.replace(singleCommentReg, "<span class='hl-code-one-line-comment'>//$1</span>");
-
-
-        //TODO 高亮多行注释
-
-
-
-
-        // for (let i = 0; i < keywords.length; i++) {
-        //     let keyword = keywords[i];
-        //     let keywordReg = new RegExp("(" + keyword + ")", "gi")
-        //
-        //     nCode += nCode.replace(keywordReg, "<span style='color: chocolate'>$1</span>")
-        // }
 
         return (nCode == null || nCode.length === 0) ? rawCode : nCode;
     }
