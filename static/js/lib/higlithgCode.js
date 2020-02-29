@@ -79,7 +79,9 @@ function higlightCode(rawCode, language) {
 
             /*流程*/
             "try", "catch", "finally",
-            "throw", "throws",
+            /*必须按照这个顺序，否则会解析throw后插入<span>就无法再次解析throws了*/
+            "throws",
+            "throw",
             "if", "else", "while", "for", "do",
             "switch", "case",
             "continue", "break", "goto",
@@ -88,12 +90,13 @@ function higlightCode(rawCode, language) {
             "assert",
 
             /*方法/修饰*/
-            "void", "protect", "public", "default", "private",
+            "void", "protected", "public", "default", "private",
             "synchronized", "static",
             "return",
 
 
             /*语言类型*/
+            "null",
             "byte",
             "true", "false",
             "shot", "int", "long",
@@ -122,78 +125,64 @@ function higlightCode(rawCode, language) {
         nCode += indentEle;
 
 
-        //高亮单行注释
-        let singleCommentReg = /\/\/(.*)/g;
-        if (singleCommentReg.test(rawCode)) {
-            nCode += rawCode.trim();
-            nCode = nCode.replace(singleCommentReg, "<span class='hl-code-one-line-comment'>//$1</span>");
-            return (nCode == null || nCode.length === 0) ? rawCode : nCode;
-        }
 
         //TODO 高亮多行注释
 
+        nCode += rawCode;
 
-        let arr = rawCode.split(/\s+/g);
-
-
-        /**
-         * 遍历每一个word
-         */
-        for (let i = 0; i < arr.length; i++) {
-            let word = arr[i].trim();
-            let firstChar = word.charAt(0);
-
-            //是否包含keyword
-            if (keywords.indexOf(word) > -1) {
-                word = "<span class='hl-code-keyword'>" + word + "</span>";
-            }
+        //高亮注解
+        let annoReg = /(@\b\w+\b)(\()?/g;
+        nCode = nCode.replace(annoReg, "<span class='hl-code-annotation'>$1</span>$2");
 
 
-            //高亮方法
-            let functionBorder = word.indexOf("(");
-            if (firstChar !== "@" && functionBorder > 0) {
-                word = "<span class='hl-code-function'>" + word.substring(0, functionBorder) + "</span>" + word.substring(functionBorder);
-            }
+        //高亮关键字
+        for (let i = 0; i < keywords.length; i++) {
+            //\\b边界限定
+            //为防止标签内的class和java关键字冲突，需要用[^=]排除class=的字段
+            let keyWordReg = new RegExp("\\b(" + keywords[i] + ")\\b([^=])", "g");
 
-            //注解
-            if (firstChar === "@") {
-                let annoBorder = word.indexOf("(");
-                if (annoBorder !== -1) {
-                    word = "<span class='hl-code-annotation'>" + word.substring(0, annoBorder) + "</span>" + word.substring(annoBorder);
-                } else {
-                    word = "<span class='hl-code-annotation'>" + word + "</span>"
-                }
-            }
-
-
-            if (i < arr.length - 1) {
-                word += " ";
-            }
-            nCode += word;
+            nCode = nCode.replace(keyWordReg, "<span class='hl-code-keyword'>$1</span>$2");
         }
 
         //高亮字符串
         let strReg = /"(.*)"/g;
         nCode = nCode.replace(strReg, "<span class='hl-code-string'>\"$1\"</span>");
 
-
-        //高亮this
-        //因为function已经在前面解析过，为了防止再次解析到方法（比如this.hello()), 需要进行检测
-        let thisFieldReg = /this\.([\w]+)/g;
-        let thisFunReg = /this\.([\w]+)\(/g;
-        let trimHtmlReg = /<[^>]+>/g;
-        let trimedCode = nCode.replace(trimHtmlReg, "");
-        //如果不是方法, 则需要处理
-        if (!thisFunReg.test(trimedCode)) {
-            nCode = nCode.replace(thisFieldReg, "<span  class='hl-code-keyword' >this</span>.<span class='hl-code-field'>$1</span>");
-        } else {
-            nCode = nCode.replace(thisFieldReg, "<span  class='hl-code-keyword' >this</span>.$1");
+        //高亮方法
+        let funReg = /\b([\w]+)\b\(/g;
+        let obj = funReg.exec(nCode);
+        if (obj) {
+            nCode = nCode.replace(funReg, "<span class='hl-code-function'>$1</span>(");
         }
 
+
+        //高亮this后面的属性
+        let thisFieldReg = /(this<\/span>).([\w]+)/;
+        //如果不是方法, 则需要处理
+        nCode = nCode.replace(thisFieldReg, "$1.<span class='hl-code-field'>$2</span>");
+        // nCode = nCode.replace(thisFieldReg, "$1.<span class='hl-code-field'>$2</span>");
+
+
+        //高亮单行注释
+        let singleCommentReg = /\/\/(.*)/g;
+        if (singleCommentReg.test(rawCode)) {
+            nCode = nCode.substring(0, nCode.indexOf("//")) + getTrimedHtml(nCode.substring(nCode.indexOf("//")));
+            nCode = nCode.replace(singleCommentReg, "<span class='hl-code-one-line-comment'>//$1</span>");
+            return (nCode == null || nCode.length === 0) ? rawCode : nCode;
+        }
 
         return (nCode == null || nCode.length === 0) ? rawCode : nCode;
     }
 
+    /**
+     * 获取去掉html标签后的文本
+     * @param html
+     * @returns {void | string | *}
+     */
+    function getTrimedHtml(html) {
+        let trimHtmlReg = /<[^>]+>/g;
+        return html.replace(trimHtmlReg, "");
+    }
 
 }
 
