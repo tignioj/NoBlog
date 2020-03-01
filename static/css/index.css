@@ -1,6 +1,8 @@
 body {
     /*background-color: #E8EAF6;*/
-    font-family: Roboto, Noto, Helvetica, Arial, sans-serif
+    font-family: Roboto, Noto, Helvetica, Arial, sans-serif;
+
+    /*font-size: 24px;*/
 }
 
 /*清除默认样式*/

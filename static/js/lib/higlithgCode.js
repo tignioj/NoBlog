@@ -5,6 +5,8 @@
  * @param language 语言
  */
 
+let isStartComment = false;
+
 function higlightCode(rawCode, language) {
 
     //代码缩进把空格替换成 &nbsp;
@@ -107,29 +109,64 @@ function higlightCode(rawCode, language) {
 
 
 
-        let nCode = "";
+        let nCode = rawCode.trim();
 
-
-
-
-        /**
-         * 高亮方法
-         * 1. 获取开头的缩进内容
-         * 2. 以空格分割字符串成一个数组
-         * 3. 遍历数组，则用对应的标签包装
-         * 关键字
-         * 数字
-         * 如果是函数
-         * @type {*|string[]}
-         */
+        // 获取开头的缩进内容
         let indentSize = rawCode.search(/[^\s]/g);
         let indentEle = "";
         if (indentSize !== -1) {
-            indentEle = "<span class='code-indent' style='padding-left: " + ((indentSize / 4)) + "em'></span>";
+            // indentEle = "<span class='code-indent' style='padding-left: " + (Math.floor((indentSize / 4)) + "em'></span>");
+            indentEle = "<span class='code-indent' style='padding-left: " + (Math.floor((indentSize / 4)*20) + "px'></span>");
         }
-        // nCode += indentEle;
 
-        nCode += rawCode;
+        // let isStartComment = false;
+
+        //TODO /**/多行注释
+        let commentStartReg = /\/\*/g;
+        let commentEndReg = /\*\//g;
+        let matterCommentStart = commentStartReg.exec(rawCode);
+        if (matterCommentStart) {
+
+            //多行注释时，
+            /**
+             * 单行有注释的开头，没有注释结尾
+             * 这时候不解析后面的任何字符，直接返回，进入下一行的解析
+             */
+            if (!isStartComment &&  /\/\*/g.test(nCode) && ! /\*\//g.test(nCode)) {
+                isStartComment = true;
+                let commentStartRegToEnd = /(\/\*.*)/g;
+                nCode = indentEle + nCode.replace(commentStartRegToEnd, "<span class='hl-code-multi-line-comment'>$1</span>");
+                return nCode;
+            }
+
+            //检测是否为单行注释
+            /**
+             * 单行有注释的开头，有注释结尾
+             *
+             */
+            let singleCommentReg = /(\/\*.*\*\/)/g;
+            if (singleCommentReg.test(rawCode)) {
+                nCode = rawCode.replace(singleCommentReg, "<span class='hl-code-one-line-comment'>$1</span>")
+            }
+
+        }
+
+        //进入了多行注释，但是注释还没结束, 直接返回
+        if (isStartComment && !commentEndReg.test(nCode)) {
+            nCode = indentEle + "<span class='hl-code-multi-line-comment'>" + nCode + "</span>";
+            return nCode;
+        }
+
+        //进入了多行注释，判断到结束字符，结束标签
+        if (isStartComment && /\*\//g.test(nCode)) {
+            let commentStartToEndReg = /(.*\*\/)/g;
+            isStartComment = false;
+            nCode = indentEle + nCode.replace(commentStartToEndReg, "<span class='hl-code-multi-line-comment'>$1</span>");
+            return nCode;
+        }
+
+
+
 
 
         //高亮数字
@@ -174,22 +211,28 @@ function higlightCode(rawCode, language) {
         // nCode = nCode.replace(thisFieldReg, "$1.<span class='hl-code-field'>$2</span>");
 
 
+        //
+        //     //高亮单行注释
+        // let singleCommentReg = /\/\/(.*)/g;
+        // if (singleCommentReg.test(rawCode)) {
+        //     //获取注释的字串
+        //     nCode = nCode.substring(0, nCode.indexOf("//")) + getTrimedHtml(nCode.substring(nCode.indexOf("//")));
+        //     nCode = nCode.replace(singleCommentReg, "<span class='hl-code-one-line-comment'>//$1</span>");
+        //     return (nCode == null || nCode.length === 0) ? rawCode : nCode;
+        // }
 
-
-
-
-
-            //高亮单行注释
+        //高亮单行注释
+        //形式//
         let singleCommentReg = /\/\/(.*)/g;
-        if (singleCommentReg.test(rawCode)) {
+        if (singleCommentReg.test(nCode)) {
             //获取注释的字串
             nCode = nCode.substring(0, nCode.indexOf("//")) + getTrimedHtml(nCode.substring(nCode.indexOf("//")));
             nCode = nCode.replace(singleCommentReg, "<span class='hl-code-one-line-comment'>//$1</span>");
-            return (nCode == null || nCode.length === 0) ? rawCode : nCode;
+            return indentEle + nCode;
         }
 
         //加入开头的缩进
-        nCode = indentEle = nCode;
+        nCode = indentEle + nCode;
         return (nCode == null || nCode.length === 0) ? rawCode : nCode;
     }
 
