@@ -92,7 +92,7 @@ idea darcular 风格的代码高亮
 .code-single-frame {
     /*padding: 0.1em;*/
     /*margin: 0.1em;*/
-    padding: 10px;
-    margin: 10px;
+    padding: 3px;
+    margin: 4px;
     background-color: whitesmoke;
 }

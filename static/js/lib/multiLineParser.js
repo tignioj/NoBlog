@@ -48,11 +48,11 @@ function MultiLineParser(arr, isMultiLine) {
 
                 // singleCodeLine = escapeCode(singleCodeLine, false);
 
-                let singleCodeLineEle = "<li class='code-multi-frame-line'>" + singleCodeLine + "</li>"
+                let singleCodeLineEle = "<li class='code-multi-frame-line'>" + singleCodeLine + "</li>";
                 this.codeEle += singleCodeLineEle;
             }
-            this.codeEle += "</ol>"
-            this.codeEle += "</div>"
+            this.codeEle += "</ol>";
+            this.codeEle += "</div>";
             this.codeEle += "</pre>";
         }
 
@@ -84,11 +84,10 @@ function MultiLineParser(arr, isMultiLine) {
                     if (c === "`") {
                         codeStart = false;
                         tempArr = [];
-                        nstr += "</span>"
+                        nstr += "</span>";
                         continue;
                     }
                     nstr += c;
-                    continue;
                 } else {
                     //转义
                     nstr += c;
@@ -96,7 +95,7 @@ function MultiLineParser(arr, isMultiLine) {
             }
             this.codeEle = nstr;
         }
-    }
+    };
 
     this.initCode();
 
@@ -116,13 +115,16 @@ function BlockParser(arr) {
         //去掉缩进的四个空格，并进行转换
         line = line.substring(4).replace(/ /g, "&nbsp;");
 
-        //高亮字符串
-        // line = line.replace(/&quot;(.*)&quot;/g, "<span style='color: darkgoldenrod'>\"$1\"</span>")
-        // line = line.replace(/&#39;(.*)&#39;/g, "<span style='color: darkgoldenrod'>\'$1\'</span>")
-        // line = higlightCode(line, "default");
 
         //转义特殊字符
         line = escapeCode(line, false);
+
+
+        //高亮字符串
+        line = line.replace(/&quot;(.*)&quot;/g, "<span style='color: darkgoldenrod'>\"$1\"</span>");
+        line = line.replace(/&#39;(.*)&#39;/g, "<span style='color: darkgoldenrod'>\'$1\'</span>");
+        // line = higlightCode(line, "default");
+
 
         //显示空行的li标签
         if (line.trim().length === 0) {

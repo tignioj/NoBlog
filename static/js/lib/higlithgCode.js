@@ -108,15 +108,23 @@ function higlightCode(rawCode, language) {
         ];
 
 
+        // '"': '&quot;',
+        //     "'": '&#39;'
 
-        let nCode = rawCode.trim();
+        let nCode = escapeCode(rawCode.trim(), false);
+
+        /**
+         * 为了防止字符‘和html标签的字符重合，我们先把原生的'转义
+         * @type {number | *}
+         */
+
 
         // 获取开头的缩进内容
         let indentSize = rawCode.search(/[^\s]/g);
         let indentEle = "";
         if (indentSize !== -1) {
             // indentEle = "<span class='code-indent' style='padding-left: " + (Math.floor((indentSize / 4)) + "em'></span>");
-            indentEle = "<span class='code-indent' style='padding-left: " + (Math.floor((indentSize / 4)*20) + "px'></span>");
+            indentEle = "<span class='code-indent' style='padding-left: " + (Math.floor((indentSize / 4) * 20) + "px'></span>");
         }
 
         // let isStartComment = false;
@@ -132,7 +140,7 @@ function higlightCode(rawCode, language) {
              * 单行有注释的开头，没有注释结尾
              * 这时候不解析后面的任何字符，直接返回，进入下一行的解析
              */
-            if (!isStartComment &&  /\/\*/g.test(nCode) && ! /\*\//g.test(nCode)) {
+            if (!isStartComment && /\/\*/g.test(nCode) && !/\*\//g.test(nCode)) {
                 isStartComment = true;
                 let commentStartRegToEnd = /(\/\*.*)/g;
                 nCode = indentEle + nCode.replace(commentStartRegToEnd, "<span class='hl-code-multi-line-comment'>$1</span>");
@@ -165,22 +173,24 @@ function higlightCode(rawCode, language) {
             return nCode;
         }
 
-
-
+        //高亮字符
+        // let str1Reg = /'([^']+)'/g;
+        let str1Reg = /&#39;(\\&#39;|\\&quot;|.{0,2})&#39;/g;
+        if (str1Reg.test(nCode)) {
+            nCode = nCode.replace(str1Reg, "<span class='hl-code-string'>'$1'</span>");
+        }
 
 
         //高亮数字
         //\b表示非字母数字与字母数字的边界。
-        let numberReg = /\b(\d+)\b/g;
-        nCode = nCode.replace(numberReg, "<span class='hl-code-number'>$1</span>");
-
+        //由于'会被转义成&#39, 我们不能高亮这个数字，否则会将&#39分割成 &#<span...>39</span> 网页就无法正确显示了
+        let numberReg = /([^#])\b(\d+)\b/g;
+        nCode = nCode.replace(numberReg, "$1<span class='hl-code-number'>$2</span>");
 
 
         //高亮注解
         let annoReg = /(@\b\w+\b)(\()?/g;
         nCode = nCode.replace(annoReg, "<span class='hl-code-annotation'>$1</span>$2");
-
-
 
 
         //高亮关键字
@@ -192,9 +202,48 @@ function higlightCode(rawCode, language) {
             nCode = nCode.replace(keyWordReg, "<span class='hl-code-keyword'>$1</span>$2");
         }
 
-        //高亮字符串
-        let strReg = /"(.*)"/g;
-        nCode = nCode.replace(strReg, "<span class='hl-code-string'>\"$1\"</span>");
+        /**
+         * 匹配 字符串 '‘
+         * 字符串开头不能是=或者\w
+         * 字符串结束：只要遇到'就结束
+         * @type {RegExp}
+         */
+        // let strRegNoClass = /([^=\w])('[^']+')+/g;
+
+        /**
+         * 去除html剩余的东西
+         * 解释
+         * 分三段
+         *<[^>]+> html标签开头
+         *([^<>]+) html标签内容，不能有 < 或者 >出现
+         *<[^>]+> html标签结束
+         * @type {RegExp}
+         */
+            // let trimHtmlReg = /<[^>]+>([^<>]+)<[^>]+>/g;
+            // let trimHtmlReg = /<[^>/]+>([^<>]+)<[^>]+>/g;
+            // let trimHtmlReg = /<[^>/]+>([^<>]+)<\/[^>]+>/g;
+        // let trimHtmlReg = /(<[^>/]+>)([^<>]+)(<\/[^>]+>)/g;
+
+
+        // 高亮字符串
+        /**
+         * 解释：
+         * (&quot;)     引号开头
+         * (.*?[^\\])   任意内容，不贪婪匹配，直到遇到非转义符号(\)的时候停止
+         * (&quot;)     在转义符号后面必须有&quot;才匹配
+         * @type {RegExp}
+         */
+        let strReg = /(&quot;)(.*?[^\\])(&quot;)/g;
+        if (strReg.test(nCode)) {
+            // nCode = nCode.replace(strReg, "<span class='hl-code-string'>\"$1\"</span>");
+            // nCode = nCode.replace(strReg, "$1<span class='hl-code-string'>$2</span>$3");
+            nCode = nCode.replace(strReg, "<span class='hl-code-string'>$1$2$3</span>");
+        }
+
+
+
+
+
 
         //高亮方法
         let funReg = /\b([\w]+)\b\(/g;
