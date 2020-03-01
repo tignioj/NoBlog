@@ -106,7 +106,12 @@ function higlightCode(rawCode, language) {
         ];
 
 
+
         let nCode = "";
+
+
+
+
         /**
          * 高亮方法
          * 1. 获取开头的缩进内容
@@ -122,17 +127,23 @@ function higlightCode(rawCode, language) {
         if (indentSize !== -1) {
             indentEle = "<span class='code-indent' style='padding-left: " + ((indentSize / 4)) + "em'></span>";
         }
-        nCode += indentEle;
-
-
-
-        //TODO 高亮多行注释
+        // nCode += indentEle;
 
         nCode += rawCode;
+
+
+        //高亮数字
+        //\b表示非字母数字与字母数字的边界。
+        let numberReg = /\b(\d+)\b/g;
+        nCode = nCode.replace(numberReg, "<span class='hl-code-number'>$1</span>");
+
+
 
         //高亮注解
         let annoReg = /(@\b\w+\b)(\()?/g;
         nCode = nCode.replace(annoReg, "<span class='hl-code-annotation'>$1</span>$2");
+
+
 
 
         //高亮关键字
@@ -163,14 +174,22 @@ function higlightCode(rawCode, language) {
         // nCode = nCode.replace(thisFieldReg, "$1.<span class='hl-code-field'>$2</span>");
 
 
-        //高亮单行注释
+
+
+
+
+
+            //高亮单行注释
         let singleCommentReg = /\/\/(.*)/g;
         if (singleCommentReg.test(rawCode)) {
+            //获取注释的字串
             nCode = nCode.substring(0, nCode.indexOf("//")) + getTrimedHtml(nCode.substring(nCode.indexOf("//")));
             nCode = nCode.replace(singleCommentReg, "<span class='hl-code-one-line-comment'>//$1</span>");
             return (nCode == null || nCode.length === 0) ? rawCode : nCode;
         }
 
+        //加入开头的缩进
+        nCode = indentEle = nCode;
         return (nCode == null || nCode.length === 0) ? rawCode : nCode;
     }
 
