@@ -48,7 +48,7 @@ function higlightCode(rawCode, language) {
         //高亮XML声明
         let docTypeReg = /(&lt;)(![\w]+)(\s+)(.*)(&gt;)/g;
         if (docTypeReg.test(nCode)) {
-            return  indentEle +  nCode.replace(docTypeReg, "$1<span class='hl-code-html-declare'>$2</span>$3<span style='color: orange'>$4</span>$5");
+            return  indentEle +  nCode.replace(docTypeReg, "$1<span class='hl-code-html-declare-tag'>$2</span>$3<span class='hl-code-html-declare-type'>$4</span>$5");
         }
 
         //判断纯文本
@@ -56,7 +56,7 @@ function higlightCode(rawCode, language) {
             return indentEle + parsePlainTextOfXML(nCode);
         }
 
-
+        //TODO 处理HTML注释
 
 
         /**

@@ -105,10 +105,16 @@ idea darcular 风格的代码高亮
 
 
 /*=============================================*/
-/*声明*/
-.hl-code-html-declare {
+/*声明 <!DOCTYPE >*/
+.hl-code-html-declare-tag {
     /*color: firebrick;*/
     color: red;
+}
+
+/*声明类型 <!DOCTYPE html>*/
+.hl-code-html-declare-type {
+    color: yellow;
+
 }
 
 /*纯文本*/
