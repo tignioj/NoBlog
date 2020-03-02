@@ -13,6 +13,6 @@ not yet.
 
 # TODO
 - [x] add support for nothing.
-- [ ]  escape.
+- [x]  escape.
 - [ ]  todo list.
 - [ ] indicator

@@ -1,0 +1,22 @@
+/*删除*/
+.md-del {
+    text-decoration-line: line-through;
+}
+
+/*斜体*/
+.md-italic {
+    /*font-style: italic;*/
+    font-style: oblique;
+    color: red;
+}
+
+/*粗体*/
+.md-strong {
+    font-weight: bold;
+    color: purple;
+}
+
+/*下划线*/
+.md-underline {
+    text-decoration: underline;
+}

@@ -99,7 +99,7 @@ function markdownParse(str) {
              * @type {RegExp}
              */
             let hasSpaceFirstWithAnyContent = /^\s{4,}.[^ ]/g;
-            return  emptyLineReg.test(fullArray[i]) && hasSpaceFirstWithAnyContent.test(fullArray[i + 1])
+            return emptyLineReg.test(fullArray[i]) && hasSpaceFirstWithAnyContent.test(fullArray[i + 1])
         }
 
         //处理结束冗余空行的计数器
@@ -253,19 +253,25 @@ function parseLine(singleLine) {
         singleLine = parseHeader(singleLine);
     }
 
+
     //\s任意空格加-开头,
-    // (?!-) 第一个-后面不能有-
-    let liReg = /^\s{0,}-(?!-)/g;
+    let liReg = /^\s*\\?-(?!-)/g;
     if (liReg.test(singleLine)) {
-        // let styles = ["\t&#8226;",  "\t&#9830;","\t&#9674;"]
-        //字符大区
-        //https://www.cnblogs.com/mengmengi/p/10137167.html
-        //TODO 更换字符
-        let styles = ["&bull;", "&deg;", "&diams;", "&loz;"];
-        let spaceLen = singleLine.substring(0, singleLine.indexOf("-")).length;
-        let style = styles[(spaceLen / 4) % 4];
-        let retractEle = "<span class='plain-list-indicator' style='padding-left: " + ((spaceLen / 4) * 20) + "px;'>" + style + "</span>";
-        singleLine = "<li class='plain-list'>" + retractEle + singleLine.substring(singleLine.indexOf("-") + 1) + "</li>";
+        //判断前面是否有转义符号
+        let liWithEscapeReg = /^\s*(\\-)(?!-)/g;
+        if (liWithEscapeReg.test(singleLine)) {
+            singleLine  = singleLine.replace(liWithEscapeReg, "-");
+        } else {
+            // let styles = ["\t&#8226;",  "\t&#9830;","\t&#9674;"]
+            //字符大区
+            //https://www.cnblogs.com/mengmengi/p/10137167.html
+            //TODO 更换字符
+            let styles = ["&bull;", "&deg;", "&diams;", "&loz;"];
+            let spaceLen = singleLine.substring(0, singleLine.indexOf("-")).length;
+            let style = styles[(spaceLen / 4) % 4];
+            let retractEle = "<span class='plain-list-indicator' style='padding-left: " + ((spaceLen / 4) * 20) + "px;'>" + style + "</span>";
+            singleLine = "<li class='plain-list'>" + retractEle + singleLine.substring(singleLine.indexOf("-") + 1) + "</li>";
+        }
     }
 
     //图像
@@ -287,29 +293,17 @@ function parseLine(singleLine) {
         singleLine = "<hr/>" + singleLine.substring(singleLine.indexOf("---") + 3);
     }
 
-    // 引用
-    // let quoReg = /^\s{0,}([>]{1,})(.*)/g;
-    // let qObj = quoReg.exec(str);
-    // if (qObj) {
-    //     let quoteLen = qObj[1].length;
-    //     let quoteStr = qObj[2];
-    //     for (let i = 0; i < quoteLen; i++) {
-    //         quoteStr = "<span style='background-color: darkgray; padding-left: 1em;'></span>" + quoteStr
-    //     }
-    //     quoteStr = "<p>" + quoteStr + "</p>";
-    //     str =  quoteStr;
-    //     //计算>的数量
-    //     // str.indexOf(quotedStr);
-    // }
-
 
     //链接[]()
     let lnReg = /(.*)\[(.*)\]\((.*)\)(.*)/g;
     singleLine = singleLine.replace(lnReg, "$1<a href=\'$3\' >$2</a>$4");
 
     //高亮==
-    let hlReg = /==(.*)==/g;
-    singleLine = singleLine.replace(hlReg, "<span style='background: yellow'>$1</span>");
+    let hlReg = /(^|[^\\])==([^=]*?)==/g;
+    if (hlReg) {
+        singleLine = singleLine.replace(hlReg, "$1<span style='background: yellow'>$2</span>");
+        singleLine = singleLine.replace(/\\=/g, "=");
+    }
 
     //斜体*
     //正则的断言
@@ -324,29 +318,57 @@ function parseLine(singleLine) {
     //兼容方法，斜体和粗体
     if (/\*([^*]{1,})\*/g.test(singleLine)) {
         //粗体
-        singleLine = singleLine.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
+        singleLine = singleLine.replace(/(^|[^\\])\*\*([^* ])(.*?)\*\*/g, "$1<span class='md-strong'>$2$3</span>");
 
         //斜体
-        let emReg = /\*([^*]{1,})\*/g;
-        singleLine = singleLine.replace(emReg, "<em>$1</em>");
+        let emReg = /(^|[^\\])\*([^ ])(.*?)(\*?)\*([^*]|$)/g;
+        singleLine = singleLine.replace(emReg, "$1<span class='md-italic'>$2$3</span>$4");
 
-        //因为粗体会把斜体覆盖，所以先执行粗体
+        //把反义符号去掉
+        singleLine = singleLine.replace(/(\\\*)/g, "*");
     }
 
 
-    let delReg = /~~(.*)~~/g;
-    singleLine = singleLine.replace(delReg, "<del>$1</del>");
+    let delReg = /([^\\])~~(.*)~~/g;
+    if (delReg.test(singleLine)) {
+        singleLine = singleLine.replace(delReg, "$1<span class='md-del'>$2</span>");
+
+        /*把反义符号去掉*/
+        singleLine = singleLine.replace(/\\~/g, "~");
+    }
 
     //下划线++
-    let undReg = /\+\+(.*)\+\+/g;
-    singleLine = singleLine.replace(undReg, "<span style='text-decoration: underline'>$1</span>");
+    let undReg = /(^|[^\\])\+\+(.*)\+\+/g;
+    if (undReg.test(singleLine)) {
+        singleLine = singleLine.replace(undReg, "$1<span class='md-underline'>$2</span>");
+
+        /*把反义符号去掉*/
+        singleLine = singleLine.replace(/\\\+/g, "+");
+    }
 
 
     // //单行代码解析``
-    let regSingleCode = /`[^`]/g;
+    // let regSingleCode = /[^\\]`[^`]/g;
+    // if (singleLine.trim().match(regSingleCode) != null) {
+    //     singleLine = parseMultiLineArr([singleLine], false);
+    // }
+    let regSingleCode = /(^|[^\\])`([^ ])(.*?)([^ ])`/g;
     if (singleLine.trim().match(regSingleCode) != null) {
-        singleLine = parseMultiLineArr([singleLine], false);
+        // singleLine = parseMultiLineArr([singleLine], false);
+        // singleLine = singleLine.replace(regSingleCode, "$1<span class='code code-single-frame'>$2$3$4</span>")
+        singleLine = singleLine.replace(regSingleCode, function (ch) {
+            ch = ch.replace(/`(.*)`/g, "$1");
+            let firstChar = ch.substring(0, 1);
+            ch = ch.substring(1);
+            ch = escapeCode(ch, false);
+            ch = highlightCode(ch, "singleline");
+            // return "<span class='code code-single-frame'>" + escapeCode(ch, false) + "</span>";
+            return firstChar + "<span class='code code-single-frame'>" + ch + "</span>";
+        });
+        singleLine = singleLine.replace(/\\`/g, "`");
     }
+
+
 
     /**
      * 没有被标签封装，说明是纯文本

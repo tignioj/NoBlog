@@ -142,3 +142,13 @@ idea darcular 风格的代码高亮
 .hl-code-html-comment {
     color: #808080;
 }
+
+
+/*=======================JSON=======================*/
+.hl-code-json-key {
+    color: #cc7832
+}
+
+.hl-code-json-value {
+    color: #629755;
+}

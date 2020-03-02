@@ -30,6 +30,8 @@ function highlightCode(rawCode, language) {
 
 //TODO 编写高亮css，添加到code组件
     switch (language) {
+        case "singleline":
+            return parseSingleLine(rawCode);
         case "java":
             return parseJava(rawCode);
         // return parseDefault(rawCode);
@@ -37,8 +39,62 @@ function highlightCode(rawCode, language) {
             return parseXML(rawCode);
         case "default":
             return parseDefault(rawCode);
-        default:
+        case "javascript":
             return parseDefault(rawCode);
+        case "json":
+            return parseJSON(rawCode);
+        default:
+            return rawCode;
+    }
+
+    function parseJSON(rawCode) {
+        let nCode = escapeCode(rawCode, false);
+        // //高亮KEY""
+        // let keyReg = /(&quot;)(.*?[^\\])(&quot;)/g;
+        let keyReg = /(&quot;)(.*?[^\\])(&quot;)\s*:/g;
+        if (keyReg.test(nCode)) {
+            // nCode = nCode.replace(strReg, "<span class='hl-code-string'>\"$1\"</span>");
+            // nCode = nCode.replace(strReg, "$1<span class='hl-code-string'>$2</span>$3");
+            nCode = nCode.replace(keyReg, "<span class='hl-code-json-key'>$1$2$3</span>:");
+        }
+
+        let valueReg = /\s*:\s*(&quot;)(.*?[^\\])(&quot;)/g;
+        if (valueReg.test(nCode)) {
+            // nCode = nCode.replace(strReg, "<span class='hl-code-string'>\"$1\"</span>");
+            // nCode = nCode.replace(strReg, "$1<span class='hl-code-string'>$2</span>$3");
+            nCode = nCode.replace(valueReg, ":<span class='hl-code-json-value'>$1$2$3</span>");
+        }
+
+        //高亮字符串''
+        // let str1Reg = /'([^']+)'/g;
+        let str1Reg = /&#39;(.*?)&#39;/g;
+        if (str1Reg.test(nCode)) {
+            nCode = nCode.replace(str1Reg, "<span class='hl-code-html-string'>'$1'</span>");
+        }
+
+        //高亮数字
+        //\b表示非字母数字与字母数字的边界。
+        //由于'会被转义成&#39, 我们不能高亮这个数字，否则会将&#39分割成 &#<span...>39</span> 网页就无法正确显示了
+        let numberReg = /([^#])\b(\d+)\b/g;
+        nCode = nCode.replace(numberReg, "$1<span class='hl-code-number'>$2</span>");
+
+
+        return nCode;
+    }
+
+
+    /**
+     * 高亮单行代码
+     * @param rawCode
+     */
+    function parseSingleLine(rawCode) {
+        //检测是否为html
+        let htmlReg = /&lt;.*&gt;/g;
+        if (htmlReg.test(rawCode)) {
+            return parseXML(rawCode);
+        } else {
+            return parseDefault(rawCode);
+        }
     }
 
     function parseXML(rawCode) {
@@ -322,7 +378,6 @@ function highlightCode(rawCode, language) {
         //拼接 缩进 换行
         nCode = indentEle + nCode;
         return nCode;
-
     }
 
 
@@ -332,6 +387,8 @@ function highlightCode(rawCode, language) {
      * @returns {string | void | *}
      */
     function parseDefault(rawCode) {
+
+
         const keywords = [
             /*=====javascript=====*/
             "function",
@@ -803,7 +860,7 @@ function highlightCode(rawCode, language) {
          * 处理被正则分割后，非全注释部分
          * 比如
          */
-         // (空白) /*注释1*/  System.out.println("ok")  /*注释2*/ public /*注释3*/ 文本4  /* 半个注释
+        // (空白) /*注释1*/  System.out.println("ok")  /*注释2*/ public /*注释3*/ 文本4  /* 半个注释
         //这里处理的包括
         //  1. 开头的空白
         //  2.  System.out.println("ok")
