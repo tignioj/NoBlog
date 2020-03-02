@@ -38,13 +38,13 @@ function MultiLineParser(arr, isMultiLine) {
             //pre标签可以保留空格
             this.codeEle = "<pre>";
             this.codeEle += "<div class='code code-multi-frame''>";
-            this.codeEle += "<ol>"
+            this.codeEle += "<ol>";
             //如果是多行代码去掉第一行和最后一行，因为它们都包含了```
             for (let i = 1; i < this.codeArr.length - 1; i++) {
                 let singleCodeLine = this.codeArr[i];
 
                 //代码高亮
-                singleCodeLine = higlightCode(singleCodeLine, this.getType());
+                singleCodeLine = highlightCode(singleCodeLine, this.getType());
 
                 // singleCodeLine = escapeCode(singleCodeLine, false);
 
@@ -70,7 +70,7 @@ function MultiLineParser(arr, isMultiLine) {
                 let c = singleCodeLine[i];
                 //说明进入了代码块
                 if (codeStart === false && c === "`") {
-                    nstr += "<span class='code code-single-frame'>"
+                    nstr += "<span class='code code-single-frame'>";
                     codeStart = true;
                     tempArr.push(c);
                     if (escapeCode.escapeTest.test(c)) {
