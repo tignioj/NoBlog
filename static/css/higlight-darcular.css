@@ -137,3 +137,8 @@ idea darcular 风格的代码高亮
 .hl-code-html-string {
     color: #629755;
 }
+
+/*xml注释*/
+.hl-code-html-comment {
+    color: #808080;
+}

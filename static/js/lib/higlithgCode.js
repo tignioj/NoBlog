@@ -5,7 +5,11 @@
  * @param language 语言
  */
 
+//判断java是否进入了多行注释
 let isStartComment = false;
+
+//判断html是否为多行注释
+let isStartMultiLineHtmlComment = false;
 
 function higlightCode(rawCode, language) {
 
@@ -48,25 +52,187 @@ function higlightCode(rawCode, language) {
         //高亮XML声明
         let docTypeReg = /(&lt;)(![\w]+)(\s+)(.*)(&gt;)/g;
         if (docTypeReg.test(nCode)) {
-            return  indentEle +  nCode.replace(docTypeReg, "$1<span class='hl-code-html-declare-tag'>$2</span>$3<span class='hl-code-html-declare-type'>$4</span>$5");
+            return indentEle + nCode.replace(docTypeReg, "$1<span class='hl-code-html-declare-tag'>$2</span>$3<span class='hl-code-html-declare-type'>$4</span>$5");
         }
 
-        //判断纯文本
-        if (!/&lt;\/?\w+.*&gt/.test(nCode)) {
-            return indentEle + parsePlainTextOfXML(nCode);
+
+        //2. 处理多行html注释
+        let startComent = /(&lt;!--.*)/g;
+        let endComment = /(--&gt;)/g;
+        if (!isStartMultiLineHtmlComment && startComent.test(nCode) && !endComment.test(nCode)) {
+            isStartMultiLineHtmlComment = true;
+            return indentEle + nCode.replace(startComent, "<span class='hl-code-html-comment'>$1</span>");
         }
+
+
+        //进入了注释
+        if (isStartMultiLineHtmlComment) {
+            //判断结束
+            if (!startComent.test(nCode) && endComment.test(nCode)) {
+                isStartMultiLineHtmlComment = false;
+                return indentEle + nCode.replace(endComment, "<span class='hl-code-html-comment'>$1</span>");
+            }
+            return indentEle + "<span class='hl-code-html-comment'>" + nCode + "</span>";
+        }
+
 
         //TODO 处理HTML注释
+        /**
+         * 切割注释和标签
+         * @type {RegExp}
+         */
+            // let tagSeparatorReg = /.*?<[^>]+>/g;
+        let commentSeparatorReg = /.*?&lt;!--((?!--&gt;).)+--&gt;/g;
+        //1. 处理单行注释
+        // let xmlComment = /<!--(.*)-->/g
 
+        //2. 拿到正则无法获取最后面的一小段的边界 比如 <!--xx-->边界(此处正则无法获取的内容)
+        let tagAfterCommentIndex = nCode.lastIndexOf("--&gt;");
+
+        //3. 拿到正则无法获取最后面的一小段
+        //文本1  <!--xx--> 文本 2
+        //切割方法只能拿到注释和注释前面的文本，所有后面的文本2需要我们手动处理
+        let tagAfterComment = nCode.substring(tagAfterCommentIndex + 6);
+
+        //4. 获取注释和注释前面的内容
+        //比如    文本1 <!--xxx-->
+        //这里我们就获取到了
+        //        文本1 <!--xxx--
+        //但是--> 需要我们自己添加上去
+        let tagCommentBefore = nCode.substring(0, tagAfterCommentIndex) + "--&gt;";
+
+        //比如：切割  abc <!--aa--> def <!--bb--> ghi <!--cc--> jkl
+        /**
+         * [
+         *      "abc <!--aa-->",
+         *      "def <!--bb-->",
+         *      "ghi <!--cc-->"
+         * ]
+         * 这里的jkl用这种切割方法是无法获取到的，我们上面低3步的时候已经单独提取处理
+         */
+            //注：由于第三步已经把jkl提取出来，所以实际上任何的 --> 后面的文本都不会在这里出现
+        let commentTagArr = tagCommentBefore.match(commentSeparatorReg);
+
+        //临时拼接处理后的的ELE,
+        //比如拼接 <span class="高亮"> &lt;a&gt;&lt;/a&gt; + </span> <span class="注释"> &lt;!--xxx--&gt;</span>
+        let temEleWithCommentAndTag = "";
+        if (commentTagArr !== null) {
+            for (let i = 0; i < commentTagArr.length; i++) {
+                //"abc <!--aa-->
+                let commentWithTag = commentTagArr[i];
+
+                //"abc | <!--aa-->  这里的|表示我们要获取的位置
+                let commentAndTagBoundaryIndex = commentWithTag.search(/&lt;!--.*&gt;/g);
+
+                //比如获取 "abc | <!--aa--> 中的 abc
+                let tagBeforeComment = commentWithTag.substring(0, commentAndTagBoundaryIndex);
+
+                //比如获取 "abc | <!--aa--> 中的 <!--aa-->
+                let comment = commentWithTag.substring(commentAndTagBoundaryIndex);
+
+                //处理tagBeforeComment , 即处理  "abc ", 其中abc可能是标签
+                let tagBeforeCommentHighlighted = parseNoneCommentXML(tagBeforeComment);
+
+
+                //处理comment, 即处理 <!--aa-->
+                let commentHighlighted = parseXMLComment(comment);
+
+                //拼接处理后的tag 和 comment
+                temEleWithCommentAndTag += tagBeforeCommentHighlighted + commentHighlighted;
+            }
+            //拼接上面提取的jkl
+            nCode = temEleWithCommentAndTag + parseNoneCommentXML(tagAfterComment);
+        } else {
+            nCode =   parseNoneCommentXML(nCode)
+        }
+
+        //拼接 缩进 换行
+        nCode = indentEle + nCode;
+        return nCode;
+
+
+        // let xmlComment = /(^\s?&lt;!--.*?--&gt;)/g;
+        // if (xmlComment.test(nCode)) {
+        //     return indentEle + nCode.replace(xmlComment, "<span class='hl-code-html-comment'>$1</span>");
+        // }
+
+
+        // //判断纯文本
+        // if (!/&lt;\/?\w+.*&gt/.test(nCode)) {
+        //     return indentEle + parsePlainTextOfXML(nCode);
+        // }
+        //
+        //
+        // /**
+        //  * 方法2
+        //  */
+        //     // let tagSeparatorReg2 = /.*?<[^>]+>/g;
+        // let tagSeparatorReg2 = /.*?&lt;((?!&gt;).)+&gt;/g;
+        //
+        // //获取标签后面的字符串
+        // let textAfterIndex = nCode.lastIndexOf("&gt;");
+        // let textAfter = nCode.substring(textAfterIndex + 4);
+        //
+        // //获取标签前面的字符串
+        // let textBeforeIndex = nCode.search(/&lt;\w+.*&gt;/g);
+        // let textBefore = nCode.substring(0, textBeforeIndex);
+        //
+        // //获取去掉两边字符串的标签
+        // let tagEle = nCode.substring(textBeforeIndex, textAfterIndex) + "&gt;";
+        //
+        // //将标签分割成标签组
+        // let tagArr2 = tagEle.match(tagSeparatorReg2);
+        // if (tagArr2 !== null) {
+        //     let tempEle = "";
+        //     for (let i = 0; i < tagArr2.length; i++) {
+        //         let plainTextWithTag = tagArr2[i];
+        //         let textAndTagBoundryReg = /&lt;\/\w+.*&gt;/g;
+        //         let textAndTagBoundry = plainTextWithTag.search(textAndTagBoundryReg);
+        //         let plainText = plainTextWithTag.substring(0, textAndTagBoundry);
+        //         let tag = plainTextWithTag.substring(textAndTagBoundry);
+        //         tempEle += parsePlainTextOfXML(plainText) + parseOneTagOfXML(tag);
+        //     }
+        //     return indentEle + parsePlainTextOfXML(textBefore) + tempEle + parsePlainTextOfXML(textAfter) + "<br/>";
+        // } else {
+        //     return indentEle + parsePlainTextOfXML(nCode);
+        // }
+    }
+
+    /**
+     * 处理XML注释
+     * @param rawComment
+     * @returns {void | string | *}
+     */
+    function parseXMLComment(rawComment) {
+        let xmlComment = /(^\s?&lt;!--.*?--&gt;)/g;
+        if (xmlComment.test(rawComment)) {
+            return rawComment.replace(xmlComment, "<span class='hl-code-html-comment'>$1</span>");
+        }
+
+    }
+
+    /**
+     * 处理非注释以外的xml标签
+     * 比如
+     * <a></a>
+     * <span class="abc"> test </span>
+     * @param nCode
+     * @returns {string}
+     */
+    function parseNoneCommentXML(nCode) {
+        //判断纯文本
+        if (!/&lt;\/?\w+.*&gt/.test(nCode)) {
+            return parsePlainTextOfXML(nCode);
+        }
 
         /**
          * 方法2
          */
-        // let tagSeparatorReg2 = /.*?<[^>]+>/g;
+            // let tagSeparatorReg2 = /.*?<[^>]+>/g;
         let tagSeparatorReg2 = /.*?&lt;((?!&gt;).)+&gt;/g;
 
         //获取标签后面的字符串
-        let textAfterIndex =  nCode.lastIndexOf("&gt;");
+        let textAfterIndex = nCode.lastIndexOf("&gt;");
         let textAfter = nCode.substring(textAfterIndex + 4);
 
         //获取标签前面的字符串
@@ -83,15 +249,16 @@ function higlightCode(rawCode, language) {
             for (let i = 0; i < tagArr2.length; i++) {
                 let plainTextWithTag = tagArr2[i];
                 let textAndTagBoundryReg = /&lt;\/\w+.*&gt;/g;
-                let textAndTagBoundry =  plainTextWithTag.search(textAndTagBoundryReg);
+                let textAndTagBoundry = plainTextWithTag.search(textAndTagBoundryReg);
                 let plainText = plainTextWithTag.substring(0, textAndTagBoundry);
                 let tag = plainTextWithTag.substring(textAndTagBoundry);
                 tempEle += parsePlainTextOfXML(plainText) + parseOneTagOfXML(tag);
             }
-            return indentEle + parsePlainTextOfXML(textBefore) + tempEle + parsePlainTextOfXML(textAfter)+ "<br/>";
+            return parsePlainTextOfXML(textBefore) + tempEle + parsePlainTextOfXML(textAfter);
         } else {
-            return indentEle + parsePlainTextOfXML(nCode);
+            return parsePlainTextOfXML(nCode);
         }
+
     }
 
     /**
@@ -439,7 +606,6 @@ function higlightCode(rawCode, language) {
         nCode = indentEle + nCode;
         return (nCode == null || nCode.length === 0) ? rawCode : nCode;
     }
-
 
     /**
      * 获取去掉html标签后的文本
