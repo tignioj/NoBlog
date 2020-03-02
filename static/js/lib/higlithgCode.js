@@ -377,7 +377,6 @@ function highlightCode(rawCode, language) {
         ];
 
 
-
         function highlightDoubleSlashComment(nCode) {
             let singleCommentReg = /\/\/(.*)/g;
             if (singleCommentReg.test(nCode)) {
@@ -400,7 +399,7 @@ function highlightCode(rawCode, language) {
 
         let indentEle = getIndentEle(rawCode);
 
-        let nCode = escapeCode(rawCode, false);
+        let nCode = escapeCode(rawCode.trim(), false);
 
         //TODO 高亮注释
         //单行注释
@@ -528,7 +527,7 @@ function highlightCode(rawCode, language) {
 
                     //
                     afterIndexOfComment = "<span class='hl-code-multi-line-comment'>" + afterIndexOfComment + "</span>";
-                    let tempEle = parseNoneCommentOfJava(stringBeforeLastCommentStartIndex) + afterIndexOfComment;
+                    let tempEle = praseDefaultWithNoComplexCommentSurrounded(stringBeforeLastCommentStartIndex) + afterIndexOfComment;
                     isStartComment = true;
                     return tempEle;
                 }
@@ -541,17 +540,28 @@ function highlightCode(rawCode, language) {
                     return nCode;
                 }
             }
-            return parseNoneCommentOfJava(nCode);
+            return praseDefaultWithNoComplexCommentSurrounded(nCode);
 
-
-            function parseNoneCommentOfJava(nCode) {
-                //进入了多行注释，但是注释还没结束, 直接返回
+            /**
+             * 因为上面已将复杂包围的注释切割成 内容 + 注释的形式,
+             * 这里处理的就是
+             * 1. 内容 + 注释
+             * 2. 内容 + 多行注释开头
+             * 3. 多行注释结尾 + 内容
+             * @param nCode
+             * @returns {string}
+             */
+            function praseDefaultWithNoComplexCommentSurrounded(nCode) {
+                //进入了多行注释，但是注释还没结束, 直接返回,
                 if (isStartComment && !commentEndReg.test(nCode)) {
                     nCode = "<span class='hl-code-multi-line-comment'>" + nCode + "</span>";
                     return nCode;
                 }
 
-                //进入了多行注释，判断到结束字符，结束标签
+                //进入了多行注释，判断到结束字符, 把注释前面的内容全部注释掉
+                //比如
+                // (被注释掉的内容)  */  没有被注释掉的内容
+                //这里处理的就是把 '(被注释掉的内容)  */' 这部分处理，剩余的没有被注释掉的内容由下面接着
                 if (isStartComment && /\*\//g.test(nCode)) {
                     let commentStartToEndReg = /(.*\*\/)/g;
                     isStartComment = false;
@@ -559,9 +569,25 @@ function highlightCode(rawCode, language) {
                 }
 
 
+                // 高亮字符串
+                /**
+                 * 解释：
+                 * (&quot;)     引号开头
+                 * (.*?[^\\])   任意内容，不贪婪匹配，直到遇到非转义符号(\)的时候停止
+                 * (&quot;)     在转义符号后面必须有&quot;才匹配
+                 * @type {RegExp}
+                 */
+                let strReg = /(&quot;)(.*?[^\\])(&quot;)/g;
+                if (strReg.test(nCode)) {
+                    // nCode = nCode.replace(strReg, "<span class='hl-code-string'>\"$1\"</span>");
+                    // nCode = nCode.replace(strReg, "$1<span class='hl-code-string'>$2</span>$3");
+                    nCode = nCode.replace(strReg, "<span class='hl-code-string'>$1$2$3</span>");
+                }
+
+
                 //高亮字符
-                // let str1Reg = /'([^']+)'/g;
-                let str1Reg = /&#39;(\\&#39;|\\&quot;|.{0,2})&#39;/g;
+                let str1Reg = /&#39;(((?!hl-code-string).)*?)&#39;/g;
+                // let str1Reg = /&#39;(.*?)&#39;/g;
                 if (str1Reg.test(nCode)) {
                     nCode = nCode.replace(str1Reg, "<span class='hl-code-string'>'$1'</span>");
                 }
@@ -585,22 +611,6 @@ function highlightCode(rawCode, language) {
                     let keyWordReg = new RegExp("\\b(" + keywords[i] + ")\\b([^=])", "g");
 
                     nCode = nCode.replace(keyWordReg, "<span class='hl-code-keyword'>$1</span>$2");
-                }
-
-
-                // 高亮字符串
-                /**
-                 * 解释：
-                 * (&quot;)     引号开头
-                 * (.*?[^\\])   任意内容，不贪婪匹配，直到遇到非转义符号(\)的时候停止
-                 * (&quot;)     在转义符号后面必须有&quot;才匹配
-                 * @type {RegExp}
-                 */
-                let strReg = /(&quot;)(.*?[^\\])(&quot;)/g;
-                if (strReg.test(nCode)) {
-                    // nCode = nCode.replace(strReg, "<span class='hl-code-string'>\"$1\"</span>");
-                    // nCode = nCode.replace(strReg, "$1<span class='hl-code-string'>$2</span>$3");
-                    nCode = nCode.replace(strReg, "<span class='hl-code-string'>$1$2$3</span>");
                 }
 
 
@@ -628,10 +638,8 @@ function highlightCode(rawCode, language) {
                     nCode = nCode.replace(singleCommentReg, "<span class='hl-code-one-line-comment'>//$1</span>");
                     return nCode;
                 }
-
                 return nCode;
             }
-
         }
 
         /**
@@ -643,7 +651,6 @@ function highlightCode(rawCode, language) {
             //检测是否为单行注释
             /**
              * 单行有注释的开头，有注释结尾
-             *
              */
             let singleCommentReg = /(\/\*.*\*\/)/g;
             if (singleCommentReg.test(nCode)) {
@@ -651,9 +658,6 @@ function highlightCode(rawCode, language) {
             }
             return nCode;
         }
-
-
-
     }
 
 
@@ -778,7 +782,7 @@ function highlightCode(rawCode, language) {
                 let comment = commentWithTag.substring(commentAndTagBoundaryIndex);
 
                 //处理tagBeforeComment , 即处理  "abc ", 其中abc是非注释的内容，比如System.out.println("ok");
-                let tagBeforeCommentHighlighted = parseAfterSplitCommentOfJava(tagBeforeComment);
+                let tagBeforeCommentHighlighted = parseJavaAfterSplitByComment(tagBeforeComment);
 
 
                 //处理comment, 即处理  "/*注释 */"
@@ -788,9 +792,9 @@ function highlightCode(rawCode, language) {
                 temEleWithCommentAndTag += tagBeforeCommentHighlighted + commentHighlighted;
             }
             //拼接上面提取的jkl
-            nCode = temEleWithCommentAndTag + parseAfterSplitCommentOfJava(tagAfterComment);
+            nCode = temEleWithCommentAndTag + parseJavaAfterSplitByComment(tagAfterComment);
         } else {
-            nCode = parseAfterSplitCommentOfJava(nCode)
+            nCode = parseJavaAfterSplitByComment(nCode)
         }
         return indentEle + nCode;
 
@@ -806,7 +810,7 @@ function highlightCode(rawCode, language) {
         //  3. public
         //  4. 文本4
         //  5. /* 半个注释
-        function parseAfterSplitCommentOfJava(nCode) {
+        function parseJavaAfterSplitByComment(nCode) {
             let commentStartReg = /\/\*/g;
             let commentEndReg = /\*\//g;
 
@@ -825,14 +829,17 @@ function highlightCode(rawCode, language) {
                     // 这里的的|就是分割的地方
                     let lastCommentStartIndex = nCode.lastIndexOf("/*");
                     //获取注释,即获取 /* 注释1
-                    let afterIndexOfComment = nCode.substring(lastCommentStartIndex);
+                    let commentAfterIndex = nCode.substring(lastCommentStartIndex);
 
                     //获取注释前面的字符串，即System.out.println("ok")      |
                     let stringBeforeLastCommentStartIndex = nCode.substring(0, lastCommentStartIndex);
 
-                    //
-                    afterIndexOfComment = "<span class='hl-code-multi-line-comment'>" + afterIndexOfComment + "</span>";
-                    let tempEle = parseNoneCommentOfJava(stringBeforeLastCommentStartIndex) + afterIndexOfComment;
+                    //处理index后面的注释, 即处理 /* 注释1
+                    commentAfterIndex = "<span class='hl-code-multi-line-comment'>" + commentAfterIndex + "</span>";
+
+                    //拼接非注释部分和注释部分
+                    let tempEle = parseNoneCommentOfJava(stringBeforeLastCommentStartIndex) + commentAfterIndex;
+
                     isStartComment = true;
                     return tempEle;
                 }
@@ -848,6 +855,11 @@ function highlightCode(rawCode, language) {
             return parseNoneCommentOfJava(nCode);
 
 
+            /***
+             * 只能处理
+             * @param nCode
+             * @returns {string}
+             */
             function parseNoneCommentOfJava(nCode) {
                 //进入了多行注释，但是注释还没结束, 直接返回
                 if (isStartComment && !commentEndReg.test(nCode)) {
@@ -935,7 +947,6 @@ function highlightCode(rawCode, language) {
 
                 return nCode;
             }
-
 
         }
 
