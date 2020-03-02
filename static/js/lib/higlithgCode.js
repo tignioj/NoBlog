@@ -43,180 +43,45 @@ function higlightCode(rawCode, language) {
             indentEle = "<span class='code-indent' style='padding-left: " + (Math.floor((indentSize / 4) * 20) + "px'></span>");
         }
 
-        //TODO 单行嵌套
-        /**
-         * 1. 检测是否单行嵌套
-         *如果是， 分割标签, 从第一个开始遍历
-         * 遍历下一个标签，检测当前标签是否为闭合标签
-         * 如果否，则继续存进数组
-         * 如果是，从数组中按顺序取出
-         */
-        /**
-         * 1. 检测当前是否为嵌套标签
-         * 检测方法：
-         *  1) 分割标签
-         *  match方法得到一个数组
-         */
-        // "<a style='color: red'> <b> haha </b></a>".match(/<[^>]+>[^<]*/g)
-        // let tagSeparatorReg = /<[^>]+>[^<]*/g;
-        // let tagSeparatorReg = /(%lt;)[^>]+&gt;[^<]*/g;
+        //判断纯文本
+        if (!/&lt;\/?\w+.*&gt/.test(nCode)) {
+            return indentEle + parsePlainTextOfXML(nCode);
+        }
 
         /**
-         * 解释：
-         * &lt;             &lt开头
-         * ((?!&gt;).)+&gt;      任意字符串但是不能出现&gt;直到&gt;为止
-         * \s+                  有么有空格都行
-         * ((?!&lt;).)*         任意字符串但是不能出现&lt;
-         *
-         * 用途：切割标签
-         *  比如  <a></a> 被切割为 ["<a>", "</a>"]
-         *
-         * 局限性1：只能以 "<" 开头， 比如不能解析
-         *      text <a> </a>
-         *      这里的text会被忽视！
-         *
-         * 解决局限性1：获取第一个 &lt;的位置, 保留前面的纯文本，后面填充
-         *      text    |   <a> </a>
-         *
-         * 局限性3： 当出现以 < 开头的纯文本，就无法高亮 比如
-         *      < 3 <a></a>
-         * 解决局限性3：  获取第一个标签的位置，同局限性1一样，分割成两部分，后面填充
-         *      < 3     |   <a> </a>
-         *
-         *
-         *
-         * 局限性2：当标签中出现 1 > 2时， 大于号会被解析为下一个标签的开始, 从而无法正确解析
-         *
-         * 解决局限性2：
-         *  提取标签文本，单独解析
-         *
-         *
-         *  局限性3：当标签的内容出现  < 时， 小于号会被解析到下一行
+         * 方法2
          */
-        let tagSeparatorReg = /&lt;((?!&gt;).)+&gt;\s*((?!&lt;).)*/g;
+        // let tagSeparatorReg2 = /.*?<[^>]+>/g;
+        let tagSeparatorReg2 = /.*?&lt;((?!&gt;).)+&gt;/g;
 
-        // 解决局限性1：获取第一个 标签 的位置, 保留前面的纯文本，后面填充
-        // let ltIndex = nCode.indexOf("&lt;");
-        // let ltIndex = nCode.indexOf("&lt;");
-        let ltIndex = nCode.search(/&lt;\w+.*&gt;/g);
-        let plainTextInFirst = ltIndex === -1 ? "" : nCode.substring(0, ltIndex);
-        let tagAfterText = ltIndex === -1 ? nCode : nCode.substring(ltIndex);
+        //获取标签后面的字符串
+        let textAfterIndex =  nCode.lastIndexOf("&gt;");
+        let textAfter = nCode.substring(textAfterIndex + 4);
+
+        //获取标签前面的字符串
+        let textBeforeIndex = nCode.search(/&lt;\w+.*&gt;/g);
+        let textBefore = nCode.substring(0, textBeforeIndex);
 
 
-        let tagArr = tagAfterText.match(tagSeparatorReg);
-        // "<a class='c1'><b> text > >  </b></a>".match(/<[^>]+>\s*[^<]*/g)
-        // "<a class='c1'><b> text > >  </b></a>".match(/<[^>]+>\s*((?!<).)*/g)
-        //"<a class='c1'><b> 1 < 2 == true   </b></a>".match(/<((?!>).)+>\s*((?!<).)*/g)
-        let nEle = "";
-        //如果分割到了字符串，说明不是纯文本
-        if (tagArr !== null) {
-            for (let i = 0; i < tagArr.length; i++) {
-                let oneSideTagWithText = tagArr[i];
-                //解决局限性 2: 获取标签后面的内容，单独解析
-                /**
-                 *
-                 * 比如<a> 1 > 2</a>中，被切割为
-                 * <a> 1 > 2
-                 * </a>
-                 * 解决：
-                 *  找到第一个 &gt;, 切割
-                 * @type {number}
-                 */
+        let tagEle = nCode.substring(textBeforeIndex, textAfterIndex) + "&gt;";
 
-                let textIndex = oneSideTagWithText.indexOf("&gt;");
-                let plainText = oneSideTagWithText.substring(textIndex + 4);
-                let oneSideTag = oneSideTagWithText.substring(0, textIndex) + "&gt;";
-
-                //解决局限性3：
-                /**
-                 * 比如<a> 1 < 3 </a> 被切割为
-                 * <a>  1
-                 * < 3 </a>
-                 * 解决：找到第一个标签的位置，如果为0，表示由局限性2处理
-                 * 如果不是0，则分割成两部分处理
-                 * @type {number | *}
-                 */
-                let textIndexAfter = oneSideTagWithText.search(/&lt;\/\w+.*&gt;/g);
-                if (textIndexAfter !== 0 && textIndexAfter !== -1) {
-                    oneSideTag = oneSideTagWithText.substring(textIndexAfter);
-                    plainText = oneSideTagWithText.substring(0, textIndexAfter);
-                    nEle += parsePlainTextOfXML(plainText) + parseOneTagOfXML(oneSideTag);
-                } else {
-                    nEle += parseOneTagOfXML(oneSideTag) + parsePlainTextOfXML(plainText);
-                }
-
+        let tagArr2 = tagEle.match(tagSeparatorReg2);
+        if (tagArr2 !== null) {
+            let tempEle = "";
+            for (let i = 0; i < tagArr2.length; i++) {
+                let plainTextWithTag = tagArr2[i];
+                // let textAndTagBoundryReg = /&lt.*&gt;/g;
+                let textAndTagBoundryReg = /&lt;\/\w+.*&gt;/g;
+                let textAndTagBoundry =  plainTextWithTag.search(textAndTagBoundryReg);
+                let plainText = plainTextWithTag.substring(0, textAndTagBoundry);
+                let tag = plainTextWithTag.substring(textAndTagBoundry);
+                tempEle += parsePlainTextOfXML(plainText) + parseOneTagOfXML(tag);
             }
-
-            return indentEle + parsePlainTextOfXML(plainTextInFirst) + nEle + "<br/>";
-            // return indentEle  + nEle + "<br/>";
+            return indentEle + parsePlainTextOfXML(textBefore) + tempEle + parsePlainTextOfXML(textAfter)+ "<br/>";
         } else {
             return indentEle + parsePlainTextOfXML(nCode);
         }
-        //
-        //
-        // //高亮XML声明
-        // let docTypeReg = /(&lt;)(![\w]+)(\s+)(.*)(&gt;)/g;
-        // nCode = nCode.replace(docTypeReg, "$1<span style='color: red'>$2</span>$3<span style='color: orange'>$4</span>$5");
-        //
-        //
-        // //                1<  2/ 3标签名称 4属性 5> 6内容    7</ 8标签名称
-        // // let tagNameReg = /(<)(\/?)([\w]+)(.*)(>)([^>]+)(\1\/)(\3)/g;
-        // //单行闭合标签
-        // // let singleLineTag = /(&lt;)(\/?)([\w]+)(.*)(&gt;)([^&gt;]*)(\1\/)(\3)/g;
-        // // let singleLineTag = /(&lt;)(\/?)([\w]+)(.*)(&gt;)([^&;]*)(\1\/)(\3)/g;
-        // let singleLineTag = /(&lt;)(\/?)([\w]+)(.*)(&gt;)(.*)(\1\/)(\3)/g;
-        // //"<a > b</a>".replace(/(<)(\/?)([\w]+)(.*)(>)([^>]+)(\1\/)(\3)/g, "#1$1# ^2$2^ (3$3) @4$4@ (5$5) @6$6@ (7$7)  #8$8#")
-        // // nCode = nCode.replace(tagNameReg, "$1$2<span style='color: red'>$3</span>$4$5$6$7$8$9$10$11");
-        // nCode = nCode.replace(singleLineTag,
-        //     /*1.2 <或者</*/
-        //     "$1$2" +
-        //     /*3 标签名称*/
-        //     "<span style='color: red'>$3</span>" +
-        //     /*4. 属性*/
-        //     "<span style='color: orange'>$4</span>" +
-        //     /*5. >*/
-        //     "$5" +
-        //     /*6. 内容*/
-        //     "<span style='color: grey'>$6</span>" +
-        //     /*7. </*/
-        //     "$7" +
-        //     /*8. 标签名称*/
-        //     "<span style='color: red'>$8</span>"
-        // );
-        //
-        //
-        // //未闭合标签
-        // //                  1<  2/ 3标签名称 4属性 5> 6内容
-        // let noCloseTag = /(&lt;)(\/?)([\w]+)(.*)(&gt;)/g;
-        // nCode = nCode.replace(noCloseTag,
-        //     /*1.2 <或者</*/
-        //     "$1$2" +
-        //     /*3 标签名称*/
-        //     "<span style='color: red'>$3</span>" +
-        //     /*4. 属性*/
-        //     "<span style='color: orange'>$4</span>" +
-        //     /*5. >*/
-        //     "$5"
-        // );
-        //
-        //
-        // // //高亮字符串
-        // let strReg = /(&quot;)(.*?[^\\])(&quot;)/g;
-        // if (strReg.test(nCode)) {
-        //     // nCode = nCode.replace(strReg, "<span class='hl-code-string'>\"$1\"</span>");
-        //     // nCode = nCode.replace(strReg, "$1<span class='hl-code-string'>$2</span>$3");
-        //     nCode = nCode.replace(strReg, "<span class='hl-code-string'>$1$2$3</span>");
-        // }
-        //
-        //
-        //
-        // //什么也没有
-        // if (nCode.trim().substring(0, 1)!=="&") {
-        //     nCode = "<span style='color: grey'>" + nCode + "</span>";
-        // }
-        //
-        // nCode = indentEle + nCode;
-        // return nCode;
+
     }
 
     /**
@@ -225,7 +90,10 @@ function higlightCode(rawCode, language) {
      * @returns {string}
      */
     function parsePlainTextOfXML(plainText) {
-        return (plainText === null || plainText.length === 0) ? "" : "<span style='color: grey'>" + plainText + "</span>";
+        if (plainText !== null && plainText !== undefined && plainText.length !== 0) {
+            return "<span style='color: grey'>" + plainText + "</span>";
+        }
+        return "";
     }
 
     /**
