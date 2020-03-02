@@ -2,7 +2,7 @@
 /**
 idea darcular 风格的代码高亮
  */
-
+/*=====================整体配置开始==============================*/
 
 /*单行代码，多行代码都有*/
 .code {
@@ -43,6 +43,23 @@ idea darcular 风格的代码高亮
     background-color: darkslategray;
 }
 
+/*=====================整体配置结束==============================*/
+
+
+/*============================单行代码开始====================*/
+/*单行代码的外层div*/
+.code-single-frame {
+    /*padding: 0.1em;*/
+    /*margin: 0.1em;*/
+    padding: 3px;
+    margin: 4px;
+    background-color: whitesmoke;
+}
+
+/*============================单行代码结束====================*/
+
+
+/*===============================高亮=================================*/
 
 
 /*注解，以@开头*/
@@ -81,18 +98,36 @@ idea darcular 风格的代码高亮
     color: #629755;
 }
 
+/*纯数字颜色*/
 .hl-code-number {
     color: #6897bb;
 }
 
 
-/*============================单行代码====================*/
+/*=============================================*/
+/*声明*/
+.hl-code-html-declare {
+    /*color: firebrick;*/
+    color: red;
+}
 
-/*单行代码的外层div*/
-.code-single-frame {
-    /*padding: 0.1em;*/
-    /*margin: 0.1em;*/
-    padding: 3px;
-    margin: 4px;
-    background-color: whitesmoke;
+/*纯文本*/
+.hl-code-html-plain-text {
+    color: #bababa;
+}
+
+/*标签名称*/
+.hl-code-html-tag {
+    color: red;
+}
+
+/*属性*/
+.hl-code-html-prop  {
+    /*color: #cc7832;*/
+    color: orange;
+}
+
+/*字符串*/
+.hl-code-html-string {
+    color: #629755;
 }

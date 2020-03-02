@@ -40,13 +40,24 @@ function higlightCode(rawCode, language) {
         let indentSize = rawCode.search(/[^\s]/g);
         let indentEle = "";
         if (indentSize !== -1) {
+            //缩进的单位
             indentEle = "<span class='code-indent' style='padding-left: " + (Math.floor((indentSize / 4) * 20) + "px'></span>");
+        }
+
+        //判断实体
+        //高亮XML声明
+        let docTypeReg = /(&lt;)(![\w]+)(\s+)(.*)(&gt;)/g;
+        if (docTypeReg.test(nCode)) {
+            return  indentEle +  nCode.replace(docTypeReg, "$1<span class='hl-code-html-declare'>$2</span>$3<span style='color: orange'>$4</span>$5");
         }
 
         //判断纯文本
         if (!/&lt;\/?\w+.*&gt/.test(nCode)) {
             return indentEle + parsePlainTextOfXML(nCode);
         }
+
+
+
 
         /**
          * 方法2
@@ -62,15 +73,15 @@ function higlightCode(rawCode, language) {
         let textBeforeIndex = nCode.search(/&lt;\w+.*&gt;/g);
         let textBefore = nCode.substring(0, textBeforeIndex);
 
-
+        //获取去掉两边字符串的标签
         let tagEle = nCode.substring(textBeforeIndex, textAfterIndex) + "&gt;";
 
+        //将标签分割成标签组
         let tagArr2 = tagEle.match(tagSeparatorReg2);
         if (tagArr2 !== null) {
             let tempEle = "";
             for (let i = 0; i < tagArr2.length; i++) {
                 let plainTextWithTag = tagArr2[i];
-                // let textAndTagBoundryReg = /&lt.*&gt;/g;
                 let textAndTagBoundryReg = /&lt;\/\w+.*&gt;/g;
                 let textAndTagBoundry =  plainTextWithTag.search(textAndTagBoundryReg);
                 let plainText = plainTextWithTag.substring(0, textAndTagBoundry);
@@ -81,7 +92,6 @@ function higlightCode(rawCode, language) {
         } else {
             return indentEle + parsePlainTextOfXML(nCode);
         }
-
     }
 
     /**
@@ -91,7 +101,7 @@ function higlightCode(rawCode, language) {
      */
     function parsePlainTextOfXML(plainText) {
         if (plainText !== null && plainText !== undefined && plainText.length !== 0) {
-            return "<span style='color: grey'>" + plainText + "</span>";
+            return "<span class='hl-code-html-plain-text'>" + plainText + "</span>";
         }
         return "";
     }
@@ -111,11 +121,6 @@ function higlightCode(rawCode, language) {
      */
     function parseOneTagOfXML(rawXML) {
         let nCode = rawXML;
-
-        //高亮XML声明
-        let docTypeReg = /(&lt;)(![\w]+)(\s+)(.*)(&gt;)/g;
-        nCode = nCode.replace(docTypeReg, "$1<span style='color: red'>$2</span>$3<span style='color: orange'>$4</span>$5");
-
 
         //                1<  2/ 3标签名称 4属性 5> 6内容    7</ 8标签名称
         // let tagNameReg = /(<)(\/?)([\w]+)(.*)(>)([^>]+)(\1\/)(\3)/g;
@@ -142,7 +147,6 @@ function higlightCode(rawCode, language) {
             "<span style='color: red'>$8</span>"
         );
 
-
         //未闭合标签
         //                  1<  2/ 3标签名称 4属性 5> 6内容
         let noCloseTag = /(&lt;)(\/?)([\w]+)(.*)(&gt;)/g;
@@ -150,9 +154,9 @@ function higlightCode(rawCode, language) {
             /*1.2 <或者</*/
             "$1$2" +
             /*3 标签名称*/
-            "<span style='color: red'>$3</span>" +
+            "<span class='hl-code-html-tag'>$3</span>" +
             /*4. 属性*/
-            "<span style='color: orange'>$4</span>" +
+            "<span class='hl-code-html-prop'>$4</span>" +
             /*5. >*/
             "$5"
         );
@@ -163,14 +167,14 @@ function higlightCode(rawCode, language) {
         if (strReg.test(nCode)) {
             // nCode = nCode.replace(strReg, "<span class='hl-code-string'>\"$1\"</span>");
             // nCode = nCode.replace(strReg, "$1<span class='hl-code-string'>$2</span>$3");
-            nCode = nCode.replace(strReg, "<span class='hl-code-string'>$1$2$3</span>");
+            nCode = nCode.replace(strReg, "<span class='hl-code-html-string'>$1$2$3</span>");
         }
 
         //高亮字符串''
         // let str1Reg = /'([^']+)'/g;
         let str1Reg = /&#39;(.*?)&#39;/g;
         if (str1Reg.test(nCode)) {
-            nCode = nCode.replace(str1Reg, "<span class='hl-code-string'>'$1'</span>");
+            nCode = nCode.replace(str1Reg, "<span class='hl-code-html-string'>'$1'</span>");
         }
 
 
@@ -435,6 +439,7 @@ function higlightCode(rawCode, language) {
         nCode = indentEle + nCode;
         return (nCode == null || nCode.length === 0) ? rawCode : nCode;
     }
+
 
     /**
      * 获取去掉html标签后的文本
