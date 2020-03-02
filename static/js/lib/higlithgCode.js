@@ -11,6 +11,10 @@ let isStartComment = false;
 //判断html是否为多行注释
 let isStartMultiLineHtmlComment = false;
 
+//默认高亮方法变量，用于判断是否进入了多行注释
+let isStartMultiLineDefaultComment = false;
+
+
 function higlightCode(rawCode, language) {
 
     //代码缩进把空格替换成 &nbsp;
@@ -38,6 +42,162 @@ function higlightCode(rawCode, language) {
     }
 
     function parseXML(rawCode) {
+        /**
+         * 单独处理每个XML标签, 不能闭合，不能有其他任何东西
+         * 参数举例 ： <a href="example.com" >
+         * 参数举例 ： <span class="ok">
+         * 参数举例 ： <span>
+         * 参数举例 ： <!DOCTYPE html>
+         *
+         * 错误参数举例： <a href="example.com"></a>
+         * 错误参数举例2: <a href="example.com"> abc </a>
+         * 错误参数举例3: <a href="example.com">
+         * @param rawXML
+         * @returns {string}
+         */
+        function parseOneTagOfXML(rawXML) {
+            let nCode = rawXML;
+
+            //                1<  2/ 3标签名称 4属性 5> 6内容    7</ 8标签名称
+            // let tagNameReg = /(<)(\/?)([\w]+)(.*)(>)([^>]+)(\1\/)(\3)/g;
+            //单行闭合标签
+            // let singleLineTag = /(&lt;)(\/?)([\w]+)(.*)(&gt;)([^&gt;]*)(\1\/)(\3)/g;
+            // let singleLineTag = /(&lt;)(\/?)([\w]+)(.*)(&gt;)([^&;]*)(\1\/)(\3)/g;
+            let singleLineTag = /(&lt;)(\/?)([\w]+)(.*)(&gt;)(.*)(\1\/)(\3)/g;
+            //"<a > b</a>".replace(/(<)(\/?)([\w]+)(.*)(>)([^>]+)(\1\/)(\3)/g, "#1$1# ^2$2^ (3$3) @4$4@ (5$5) @6$6@ (7$7)  #8$8#")
+            // nCode = nCode.replace(tagNameReg, "$1$2<span style='color: red'>$3</span>$4$5$6$7$8$9$10$11");
+            nCode = nCode.replace(singleLineTag,
+                /*1.2 <或者</*/
+                "$1$2" +
+                /*3 标签名称*/
+                "<span style='color: red'>$3</span>" +
+                /*4. 属性*/
+                "<span style='color: orange'>$4</span>" +
+                /*5. >*/
+                "$5" +
+                /*6. 内容*/
+                "<span style='color: grey'>$6</span>" +
+                /*7. </*/
+                "$7" +
+                /*8. 标签名称*/
+                "<span style='color: red'>$8</span>"
+            );
+
+            //未闭合标签
+            //                  1<  2/ 3标签名称 4属性 5> 6内容
+            let noCloseTag = /(&lt;)(\/?)([\w]+)(.*)(&gt;)/g;
+            nCode = nCode.replace(noCloseTag,
+                /*1.2 <或者</*/
+                "$1$2" +
+                /*3 标签名称*/
+                "<span class='hl-code-html-tag'>$3</span>" +
+                /*4. 属性*/
+                "<span class='hl-code-html-prop'>$4</span>" +
+                /*5. >*/
+                "$5"
+            );
+
+
+            // //高亮字符串""
+            let strReg = /(&quot;)(.*?[^\\])(&quot;)/g;
+            if (strReg.test(nCode)) {
+                // nCode = nCode.replace(strReg, "<span class='hl-code-string'>\"$1\"</span>");
+                // nCode = nCode.replace(strReg, "$1<span class='hl-code-string'>$2</span>$3");
+                nCode = nCode.replace(strReg, "<span class='hl-code-html-string'>$1$2$3</span>");
+            }
+
+            //高亮字符串''
+            // let str1Reg = /'([^']+)'/g;
+            let str1Reg = /&#39;(.*?)&#39;/g;
+            if (str1Reg.test(nCode)) {
+                nCode = nCode.replace(str1Reg, "<span class='hl-code-html-string'>'$1'</span>");
+            }
+
+
+            //什么也没有
+            if (nCode.trim().substring(0, 1) !== "&") {
+                return parsePlainTextOfXML(nCode);
+            }
+
+
+            return nCode;
+        }
+
+
+        /**
+         * 处理非注释以外的xml标签
+         * 比如
+         * <a></a>
+         * <span class="abc"> test </span>
+         * @param nCode
+         * @returns {string}
+         */
+        function parseNoneCommentXML(nCode) {
+            //判断纯文本
+            if (!/&lt;\/?\w+.*&gt/.test(nCode)) {
+                return parsePlainTextOfXML(nCode);
+            }
+
+            /**
+             * 方法2
+             */
+                // let tagSeparatorReg2 = /.*?<[^>]+>/g;
+            let tagSeparatorReg2 = /.*?&lt;((?!&gt;).)+&gt;/g;
+
+            //获取标签后面的字符串
+            let textAfterIndex = nCode.lastIndexOf("&gt;");
+            let textAfter = nCode.substring(textAfterIndex + 4);
+
+            //获取标签前面的字符串
+            let textBeforeIndex = nCode.search(/&lt;\w+.*&gt;/g);
+            let textBefore = nCode.substring(0, textBeforeIndex);
+
+            //获取去掉两边字符串的标签
+            let tagEle = nCode.substring(textBeforeIndex, textAfterIndex) + "&gt;";
+
+            //将标签分割成标签组
+            let tagArr2 = tagEle.match(tagSeparatorReg2);
+            if (tagArr2 !== null) {
+                let tempEle = "";
+                for (let i = 0; i < tagArr2.length; i++) {
+                    let plainTextWithTag = tagArr2[i];
+                    let textAndTagBoundryReg = /&lt;\/\w+.*&gt;/g;
+                    let textAndTagBoundry = plainTextWithTag.search(textAndTagBoundryReg);
+                    let plainText = plainTextWithTag.substring(0, textAndTagBoundry);
+                    let tag = plainTextWithTag.substring(textAndTagBoundry);
+                    tempEle += parsePlainTextOfXML(plainText) + parseOneTagOfXML(tag);
+                }
+                return parsePlainTextOfXML(textBefore) + tempEle + parsePlainTextOfXML(textAfter);
+            } else {
+                return parsePlainTextOfXML(nCode);
+            }
+
+        }
+
+        /**
+         * 处理XML的纯文本
+         * @param plainText
+         * @returns {string}
+         */
+        function parsePlainTextOfXML(plainText) {
+            if (plainText !== null && plainText !== undefined && plainText.length !== 0) {
+                return "<span class='hl-code-html-plain-text'>" + plainText + "</span>";
+            }
+            return "";
+        }
+
+        /**
+         * 处理XML注释
+         * @param rawComment
+         * @returns {void | string | *}
+         */
+        function parseXMLComment(rawComment) {
+            let xmlComment = /(^\s?&lt;!--.*?--&gt;)/g;
+            if (xmlComment.test(rawComment)) {
+                return rawComment.replace(xmlComment, "<span class='hl-code-html-comment'>$1</span>");
+            }
+        }
+
         let nCode = escapeCode(rawCode.trim(), false);
 
         // 获取开头的缩进内容
@@ -45,7 +205,8 @@ function higlightCode(rawCode, language) {
         let indentEle = "";
         if (indentSize !== -1) {
             //缩进的单位
-            indentEle = "<span class='code-indent' style='padding-left: " + (Math.floor((indentSize / 4) * 20) + "px'></span>");
+            // indentEle = "<span class='code-indent' style='padding-left: " + (Math.floor((indentSize / 4) * 20) + "px'></span>");
+            indentEle = rawCode.substring(0, indentSize);
         }
 
         //判断实体
@@ -56,14 +217,22 @@ function higlightCode(rawCode, language) {
         }
 
 
-        //2. 处理多行html注释
+        //2. 处理多行简单的多行html注释
+        /**
+         *      <!--
+         *          abc -->
+         * 或者
+         * <!--
+         *  abc
+         * -->
+         * @type {RegExp}
+         */
         let startComent = /(&lt;!--.*)/g;
         let endComment = /(--&gt;)/g;
         if (!isStartMultiLineHtmlComment && startComent.test(nCode) && !endComment.test(nCode)) {
             isStartMultiLineHtmlComment = true;
             return indentEle + nCode.replace(startComent, "<span class='hl-code-html-comment'>$1</span>");
         }
-
 
         //进入了注释
         if (isStartMultiLineHtmlComment) {
@@ -76,7 +245,11 @@ function higlightCode(rawCode, language) {
         }
 
 
-        //TODO 处理HTML注释
+        //TODO 处理复杂html注释
+        /**
+         * 比如
+         * <!--注释1--> <a>不是注释</a> <!--注释2--> <a>不是注释</a>
+         */
         /**
          * 切割注释和标签
          * @type {RegExp}
@@ -143,230 +316,15 @@ function higlightCode(rawCode, language) {
             //拼接上面提取的jkl
             nCode = temEleWithCommentAndTag + parseNoneCommentXML(tagAfterComment);
         } else {
-            nCode =   parseNoneCommentXML(nCode)
+            nCode = parseNoneCommentXML(nCode)
         }
 
         //拼接 缩进 换行
         nCode = indentEle + nCode;
         return nCode;
 
-
-        // let xmlComment = /(^\s?&lt;!--.*?--&gt;)/g;
-        // if (xmlComment.test(nCode)) {
-        //     return indentEle + nCode.replace(xmlComment, "<span class='hl-code-html-comment'>$1</span>");
-        // }
-
-
-        // //判断纯文本
-        // if (!/&lt;\/?\w+.*&gt/.test(nCode)) {
-        //     return indentEle + parsePlainTextOfXML(nCode);
-        // }
-        //
-        //
-        // /**
-        //  * 方法2
-        //  */
-        //     // let tagSeparatorReg2 = /.*?<[^>]+>/g;
-        // let tagSeparatorReg2 = /.*?&lt;((?!&gt;).)+&gt;/g;
-        //
-        // //获取标签后面的字符串
-        // let textAfterIndex = nCode.lastIndexOf("&gt;");
-        // let textAfter = nCode.substring(textAfterIndex + 4);
-        //
-        // //获取标签前面的字符串
-        // let textBeforeIndex = nCode.search(/&lt;\w+.*&gt;/g);
-        // let textBefore = nCode.substring(0, textBeforeIndex);
-        //
-        // //获取去掉两边字符串的标签
-        // let tagEle = nCode.substring(textBeforeIndex, textAfterIndex) + "&gt;";
-        //
-        // //将标签分割成标签组
-        // let tagArr2 = tagEle.match(tagSeparatorReg2);
-        // if (tagArr2 !== null) {
-        //     let tempEle = "";
-        //     for (let i = 0; i < tagArr2.length; i++) {
-        //         let plainTextWithTag = tagArr2[i];
-        //         let textAndTagBoundryReg = /&lt;\/\w+.*&gt;/g;
-        //         let textAndTagBoundry = plainTextWithTag.search(textAndTagBoundryReg);
-        //         let plainText = plainTextWithTag.substring(0, textAndTagBoundry);
-        //         let tag = plainTextWithTag.substring(textAndTagBoundry);
-        //         tempEle += parsePlainTextOfXML(plainText) + parseOneTagOfXML(tag);
-        //     }
-        //     return indentEle + parsePlainTextOfXML(textBefore) + tempEle + parsePlainTextOfXML(textAfter) + "<br/>";
-        // } else {
-        //     return indentEle + parsePlainTextOfXML(nCode);
-        // }
     }
 
-    /**
-     * 处理XML注释
-     * @param rawComment
-     * @returns {void | string | *}
-     */
-    function parseXMLComment(rawComment) {
-        let xmlComment = /(^\s?&lt;!--.*?--&gt;)/g;
-        if (xmlComment.test(rawComment)) {
-            return rawComment.replace(xmlComment, "<span class='hl-code-html-comment'>$1</span>");
-        }
-
-    }
-
-    /**
-     * 处理非注释以外的xml标签
-     * 比如
-     * <a></a>
-     * <span class="abc"> test </span>
-     * @param nCode
-     * @returns {string}
-     */
-    function parseNoneCommentXML(nCode) {
-        //判断纯文本
-        if (!/&lt;\/?\w+.*&gt/.test(nCode)) {
-            return parsePlainTextOfXML(nCode);
-        }
-
-        /**
-         * 方法2
-         */
-            // let tagSeparatorReg2 = /.*?<[^>]+>/g;
-        let tagSeparatorReg2 = /.*?&lt;((?!&gt;).)+&gt;/g;
-
-        //获取标签后面的字符串
-        let textAfterIndex = nCode.lastIndexOf("&gt;");
-        let textAfter = nCode.substring(textAfterIndex + 4);
-
-        //获取标签前面的字符串
-        let textBeforeIndex = nCode.search(/&lt;\w+.*&gt;/g);
-        let textBefore = nCode.substring(0, textBeforeIndex);
-
-        //获取去掉两边字符串的标签
-        let tagEle = nCode.substring(textBeforeIndex, textAfterIndex) + "&gt;";
-
-        //将标签分割成标签组
-        let tagArr2 = tagEle.match(tagSeparatorReg2);
-        if (tagArr2 !== null) {
-            let tempEle = "";
-            for (let i = 0; i < tagArr2.length; i++) {
-                let plainTextWithTag = tagArr2[i];
-                let textAndTagBoundryReg = /&lt;\/\w+.*&gt;/g;
-                let textAndTagBoundry = plainTextWithTag.search(textAndTagBoundryReg);
-                let plainText = plainTextWithTag.substring(0, textAndTagBoundry);
-                let tag = plainTextWithTag.substring(textAndTagBoundry);
-                tempEle += parsePlainTextOfXML(plainText) + parseOneTagOfXML(tag);
-            }
-            return parsePlainTextOfXML(textBefore) + tempEle + parsePlainTextOfXML(textAfter);
-        } else {
-            return parsePlainTextOfXML(nCode);
-        }
-
-    }
-
-    /**
-     * 处理XML的纯文本
-     * @param plainText
-     * @returns {string}
-     */
-    function parsePlainTextOfXML(plainText) {
-        if (plainText !== null && plainText !== undefined && plainText.length !== 0) {
-            return "<span class='hl-code-html-plain-text'>" + plainText + "</span>";
-        }
-        return "";
-    }
-
-    /**
-     * 单独处理每个XML标签, 不能闭合，不能有其他任何东西
-     * 参数举例 ： <a href="example.com" >
-     * 参数举例 ： <span class="ok">
-     * 参数举例 ： <span>
-     * 参数举例 ： <!DOCTYPE html>
-     *
-     * 错误参数举例： <a href="example.com"></a>
-     * 错误参数举例2: <a href="example.com"> abc </a>
-     * 错误参数举例3: <a href="example.com">
-     * @param rawXML
-     * @returns {string}
-     */
-    function parseOneTagOfXML(rawXML) {
-        let nCode = rawXML;
-
-        //                1<  2/ 3标签名称 4属性 5> 6内容    7</ 8标签名称
-        // let tagNameReg = /(<)(\/?)([\w]+)(.*)(>)([^>]+)(\1\/)(\3)/g;
-        //单行闭合标签
-        // let singleLineTag = /(&lt;)(\/?)([\w]+)(.*)(&gt;)([^&gt;]*)(\1\/)(\3)/g;
-        // let singleLineTag = /(&lt;)(\/?)([\w]+)(.*)(&gt;)([^&;]*)(\1\/)(\3)/g;
-        let singleLineTag = /(&lt;)(\/?)([\w]+)(.*)(&gt;)(.*)(\1\/)(\3)/g;
-        //"<a > b</a>".replace(/(<)(\/?)([\w]+)(.*)(>)([^>]+)(\1\/)(\3)/g, "#1$1# ^2$2^ (3$3) @4$4@ (5$5) @6$6@ (7$7)  #8$8#")
-        // nCode = nCode.replace(tagNameReg, "$1$2<span style='color: red'>$3</span>$4$5$6$7$8$9$10$11");
-        nCode = nCode.replace(singleLineTag,
-            /*1.2 <或者</*/
-            "$1$2" +
-            /*3 标签名称*/
-            "<span style='color: red'>$3</span>" +
-            /*4. 属性*/
-            "<span style='color: orange'>$4</span>" +
-            /*5. >*/
-            "$5" +
-            /*6. 内容*/
-            "<span style='color: grey'>$6</span>" +
-            /*7. </*/
-            "$7" +
-            /*8. 标签名称*/
-            "<span style='color: red'>$8</span>"
-        );
-
-        //未闭合标签
-        //                  1<  2/ 3标签名称 4属性 5> 6内容
-        let noCloseTag = /(&lt;)(\/?)([\w]+)(.*)(&gt;)/g;
-        nCode = nCode.replace(noCloseTag,
-            /*1.2 <或者</*/
-            "$1$2" +
-            /*3 标签名称*/
-            "<span class='hl-code-html-tag'>$3</span>" +
-            /*4. 属性*/
-            "<span class='hl-code-html-prop'>$4</span>" +
-            /*5. >*/
-            "$5"
-        );
-
-
-        // //高亮字符串""
-        let strReg = /(&quot;)(.*?[^\\])(&quot;)/g;
-        if (strReg.test(nCode)) {
-            // nCode = nCode.replace(strReg, "<span class='hl-code-string'>\"$1\"</span>");
-            // nCode = nCode.replace(strReg, "$1<span class='hl-code-string'>$2</span>$3");
-            nCode = nCode.replace(strReg, "<span class='hl-code-html-string'>$1$2$3</span>");
-        }
-
-        //高亮字符串''
-        // let str1Reg = /'([^']+)'/g;
-        let str1Reg = /&#39;(.*?)&#39;/g;
-        if (str1Reg.test(nCode)) {
-            nCode = nCode.replace(str1Reg, "<span class='hl-code-html-string'>'$1'</span>");
-        }
-
-
-        //什么也没有
-        if (nCode.trim().substring(0, 1) !== "&") {
-            return parsePlainTextOfXML(nCode);
-        }
-
-
-        return nCode;
-    }
-
-
-    function hlString(line) {
-        //拿到key world
-
-        //高亮字符串
-        // line = line.replace(/&quot;(.*)&quot;/g, "<span style='color: darkgoldenrod'>\"$1\"</span>")
-        if (/"(.*)"/g.test(line)) {
-            line = line.replace(/"(.*)"/g, "<span style='color: darkgoldenrod'>\"$1\"</span>");
-        } else if (/'(.*)'/g.test(line)) {
-            line = line.replace(/'(.*)'/g, "<span style='color: darkgoldenrod'>\'$1\'</span>");
-        }
-        return line;
-    }
 
     /**
      * 默认的解析方法
@@ -374,19 +332,126 @@ function higlightCode(rawCode, language) {
      * @returns {string | void | *}
      */
     function parseDefault(rawCode) {
-        let afterHiglight;
+        const keywords = [
+            /*=====javascript=====*/
+            "function",
+            "var", "let",
+            "document",
 
-        //TODO 高亮字符串
-        afterHiglight = hlString(rawCode);
 
-        //TODO 高亮数字
-        //TODO 高亮函数
-        //TODO 高亮包名
+            /*=====java=======*/
+            /*包*/
+            "import", "package",
+            /*类*/
+            "new",
+            "class", "abstract", "interface",
+            "extends", "implements",
+            "this", "instanceof", "super",
+
+            /*流程*/
+            "try", "catch", "finally",
+            /*必须按照这个顺序，否则会解析throw后插入<span>就无法再次解析throws了*/
+            "throws",
+            "throw",
+            "if", "else", "while", "for", "do",
+            "switch", "case",
+            "continue", "break", "goto",
+
+            /*断言*/
+            "assert",
+
+            /*方法/修饰*/
+            "void", "protected", "public", "default", "private",
+            "synchronized", "static",
+            "return",
+
+
+            /*语言类型*/
+            "null",
+            "byte",
+            "true", "false",
+            "shot", "int", "long",
+            "float", "double",
+            "char",
+            "enum",
+        ];
+
+
+        function hlString(nCode) {
+            let strReg = /(&quot;)(.*?[^\\])(&quot;)/g;
+            if (strReg.test(nCode)) {
+                // nCode = nCode.replace(strReg, "<span class='hl-code-string'>\"$1\"</span>");
+                // nCode = nCode.replace(strReg, "$1<span class='hl-code-string'>$2</span>$3");
+                nCode = nCode.replace(strReg, "<span class='hl-code-string'>$1$2$3</span>");
+            }
+            return nCode;
+        }
+
+        function hlFunction(nCode) {
+            let funReg = /\b([\w]+)\b\(/g;
+            let obj = funReg.exec(nCode);
+            if (obj) {
+                nCode = nCode.replace(funReg, "<span class='hl-code-function'>$1</span>(");
+            }
+            return nCode;
+        }
+
+        function hlKeyWords(nCode) {
+            //高亮关键字
+            for (let i = 0; i < keywords.length; i++) {
+                //\\b边界限定
+                //为防止标签内的class和java关键字冲突，需要用[^=]排除class=的字段
+                let keyWordReg = new RegExp("\\b(" + keywords[i] + ")\\b([^=])", "g");
+
+                nCode = nCode.replace(keyWordReg, "<span class='hl-code-keyword'>$1</span>$2");
+            }
+            return nCode;
+        }
+
+
+        function highlightNumber(nCode) {
+            //高亮数字
+            //\b表示非字母数字与字母数字的边界。
+            //由于'会被转义成&#39, 我们不能高亮这个数字，否则会将&#39分割成 &#<span...>39</span> 网页就无法正确显示了
+            let numberReg = /([^#])\b(\d+)\b/g;
+            return nCode.replace(numberReg, "$1<span class='hl-code-number'>$2</span>");
+        }
+
+        function highlightDoubleSlashComment(nCode) {
+            let singleCommentReg = /\/\/(.*)/g;
+            if (singleCommentReg.test(nCode)) {
+                //获取注释的字串
+                nCode = nCode.substring(0, nCode.indexOf("//")) + getTrimedHtml(nCode.substring(nCode.indexOf("//")));
+                nCode = nCode.replace(singleCommentReg, "<span class='hl-code-one-line-comment'>//$1</span>");
+            }
+            return nCode;
+        }
+
+
+        let nCode = escapeCode(rawCode, false);
+
+        // 高亮关键字
+        nCode = hlKeyWords(nCode);
+
+        //
+        // 高亮字符串
+        nCode = hlString(nCode);
+        //
+        // 高亮数字
+        nCode = highlightNumber(nCode);
+        //
+        //高亮函数
+        nCode = hlFunction(nCode);
+
         //TODO 高亮注释
-        //TODO 高亮关键字
+        //单行注释
+        nCode = highlightDoubleSlashComment(nCode);
+
+        //多行注释
+
 
         // return "<span style='color: " + getRanDomColor() + ";'>" + rawCode + "</span>";
-        return afterHiglight;
+        return nCode;
     }
 
 
@@ -436,7 +501,6 @@ function higlightCode(rawCode, language) {
 
         // '"': '&quot;',
         //     "'": '&#39;'
-
         let nCode = escapeCode(rawCode.trim(), false);
 
         /**
@@ -445,23 +509,27 @@ function higlightCode(rawCode, language) {
          */
 
 
-            // 获取开头的缩进内容
-        let indentSize = rawCode.search(/[^\s]/g);
-        let indentEle = "";
-        if (indentSize !== -1) {
-            // indentEle = "<span class='code-indent' style='padding-left: " + (Math.floor((indentSize / 4)) + "em'></span>");
-            indentEle = "<span class='code-indent' style='padding-left: " + (Math.floor((indentSize / 4) * 20) + "px'></span>");
+        // 获取开头的缩进内容
+        function getIndentEle(rawCode) {
+            let indentSize = rawCode.search(/[^\s]/g);
+            let indentEle = "";
+            if (indentSize > 0) {
+                indentEle = rawCode.substr(0, indentSize);
+            }
+            return indentEle;
         }
 
-        // let isStartComment = false;
+        let indentEle = getIndentEle(rawCode);
+
 
         //TODO /**/多行注释
+        //切割 /**/
+
+
         let commentStartReg = /\/\*/g;
         let commentEndReg = /\*\//g;
         let matterCommentStart = commentStartReg.exec(rawCode);
         if (matterCommentStart) {
-
-            //多行注释时，
             /**
              * 单行有注释的开头，没有注释结尾
              * 这时候不解析后面的任何字符，直接返回，进入下一行的解析
@@ -473,12 +541,13 @@ function higlightCode(rawCode, language) {
                 return nCode;
             }
 
-            //检测是否为单行注释
+                // let singleCommentReg = /(\/\*.*\*\/)/g;
+            //检测是否为单行注释, 中间不能有其它内容
             /**
-             * 单行有注释的开头，有注释结尾
              *
+             * @type {RegExp}
              */
-            let singleCommentReg = /(\/\*.*\*\/)/g;
+            let singleCommentReg = /^\s*?(\/\*((?!\*\/|\/\*).)+\*\/)\s*?$/g;
             if (singleCommentReg.test(rawCode)) {
                 nCode = rawCode.replace(singleCommentReg, "<span class='hl-code-one-line-comment'>$1</span>")
             }
@@ -499,112 +568,335 @@ function higlightCode(rawCode, language) {
             return nCode;
         }
 
-        //高亮字符
-        // let str1Reg = /'([^']+)'/g;
-        let str1Reg = /&#39;(\\&#39;|\\&quot;|.{0,2})&#39;/g;
-        if (str1Reg.test(nCode)) {
-            nCode = nCode.replace(str1Reg, "<span class='hl-code-string'>'$1'</span>");
-        }
 
-
-        //高亮数字
-        //\b表示非字母数字与字母数字的边界。
-        //由于'会被转义成&#39, 我们不能高亮这个数字，否则会将&#39分割成 &#<span...>39</span> 网页就无法正确显示了
-        let numberReg = /([^#])\b(\d+)\b/g;
-        nCode = nCode.replace(numberReg, "$1<span class='hl-code-number'>$2</span>");
-
-
-        //高亮注解
-        let annoReg = /(@\b\w+\b)(\()?/g;
-        nCode = nCode.replace(annoReg, "<span class='hl-code-annotation'>$1</span>$2");
-
-
-        //高亮关键字
-        for (let i = 0; i < keywords.length; i++) {
-            //\\b边界限定
-            //为防止标签内的class和java关键字冲突，需要用[^=]排除class=的字段
-            let keyWordReg = new RegExp("\\b(" + keywords[i] + ")\\b([^=])", "g");
-
-            nCode = nCode.replace(keyWordReg, "<span class='hl-code-keyword'>$1</span>$2");
-        }
-
+        //处理复杂注释
+        //TODO 处理复杂html注释
         /**
-         * 匹配 字符串 '‘
-         * 字符串开头不能是=或者\w
-         * 字符串结束：只要遇到'就结束
+         * 比如
+         * <!--注释1--> <a>不是注释</a> <!--注释2--> <a>不是注释</a>
+         */
+        /**
+         * 切割注释和标签
          * @type {RegExp}
          */
-        // let strRegNoClass = /([^=\w])('[^']+')+/g;
+            // let tagSeparatorReg = /.*?<[^>]+>/g;
+            // let commentSeparatorReg = /.*?&lt;!--((?!--&gt;).)+--&gt;/g;
+        let commentSeparatorReg = /.*?\/\*((?!\*\/).)+\*\//g;
 
-        /**
-         * 去除html剩余的东西
-         * 解释
-         * 分三段
-         *<[^>]+> html标签开头
-         *([^<>]+) html标签内容，不能有 < 或者 >出现
-         *<[^>]+> html标签结束
-         * @type {RegExp}
-         */
-        // let trimHtmlReg = /<[^>]+>([^<>]+)<[^>]+>/g;
-        // let trimHtmlReg = /<[^>/]+>([^<>]+)<[^>]+>/g;
-        // let trimHtmlReg = /<[^>/]+>([^<>]+)<\/[^>]+>/g;
-        // let trimHtmlReg = /(<[^>/]+>)([^<>]+)(<\/[^>]+>)/g;
+        //2. 拿到正则无法获取最后面的一小段的边界 比如 <!--xx-->边界(此处正则无法获取的内容)
+        // let tagAfterCommentIndex = nCode.lastIndexOf("--&gt;");
+        let tagAfterCommentIndex = nCode.lastIndexOf("*/");
+
+        //3. 拿到正则无法获取最后面的一小段
+        //文本1  /*注释1*/ 文本 2
+        //切割方法只能拿到注释和注释前面的文本，所有后面的文本2需要我们手动处理
+        let tagAfterComment = nCode.substring(tagAfterCommentIndex + 2);
+
+        //4. 获取注释和注释前面的内容
+        //比如    文本1 /*注释1*/
+        //这里我们就获取到了
+        //        文本1 /*注释1
+        //但是注释的闭合*/ 需要我们自己添加上去
+        let tagCommentBefore = nCode.substring(0, tagAfterCommentIndex) + "*/";
+
+        //比如：切割  abc /*注释1*/ def /**注释2*/ ghi /*注释3*/ jkl
+        // /**
+        //   [
+        //        "abc /*注释1*/",
+        //        "def /*注释2*/",
+        //        "ghi /*注释3*/"
+        //   ]
+        //   这里的jkl用这种切割方法是无法获取到的，我们上面低3步的时候已经单独提取处理
+        //注：由于第三步已经把jkl提取出来，所以实际上任何的 */ 后面的文本都不会在这里出现
+        let commentTagArr = tagCommentBefore.match(commentSeparatorReg);
+
+        //临时拼接处理后的的ELE,
+        //比如拼接 <span class="高亮"> System.out.println("ok") </span> <span class="注释"> /*注释*/ </span>
+        let temEleWithCommentAndTag = "";
+        if (commentTagArr !== null) {
+            for (let i = 0; i < commentTagArr.length; i++) {
+                //"abc /*注释1*/
+                let commentWithTag = commentTagArr[i];
+
+                //"abc | /*注释2*/  这里的|表示我们要获取的位置
+                let commentAndTagBoundaryIndex = commentWithTag.search(/\/\*.*\*\//g);
+
+                //比如获取 "abc | /*注释*/ 中的 abc
+                let tagBeforeComment = commentWithTag.substring(0, commentAndTagBoundaryIndex);
+
+                //比如获取 "abc | /*注释*/ 中的 /*注释*/
+                let comment = commentWithTag.substring(commentAndTagBoundaryIndex);
+
+                //处理tagBeforeComment , 即处理  "abc ", 其中abc是非注释的内容，比如System.out.println("ok");
+                let tagBeforeCommentHighlighted = parseNoneCommentJava(tagBeforeComment);
 
 
-        // 高亮字符串
-        /**
-         * 解释：
-         * (&quot;)     引号开头
-         * (.*?[^\\])   任意内容，不贪婪匹配，直到遇到非转义符号(\)的时候停止
-         * (&quot;)     在转义符号后面必须有&quot;才匹配
-         * @type {RegExp}
-         */
-        let strReg = /(&quot;)(.*?[^\\])(&quot;)/g;
-        if (strReg.test(nCode)) {
-            // nCode = nCode.replace(strReg, "<span class='hl-code-string'>\"$1\"</span>");
-            // nCode = nCode.replace(strReg, "$1<span class='hl-code-string'>$2</span>$3");
-            nCode = nCode.replace(strReg, "<span class='hl-code-string'>$1$2$3</span>");
+                //处理comment, 即处理  "/*注释 */"
+                let commentHighlighted = parseJavaComment(comment);
+
+                //拼接处理后的tag 和 comment
+                temEleWithCommentAndTag += tagBeforeCommentHighlighted + commentHighlighted;
+            }
+            //拼接上面提取的jkl
+            nCode = temEleWithCommentAndTag + parseNoneCommentJava(tagAfterComment);
+        } else {
+            nCode = parseNoneCommentJava(nCode)
         }
 
+        return indentEle + nCode;
 
-        //高亮方法
-        let funReg = /\b([\w]+)\b\(/g;
-        let obj = funReg.exec(nCode);
-        if (obj) {
-            nCode = nCode.replace(funReg, "<span class='hl-code-function'>$1</span>(");
+        function parseNoneCommentJava(nCode) {
+            let commentStartReg = /\/\*/g;
+            let commentEndReg = /\*\//g;
+            let matterCommentStart = commentStartReg.exec(rawCode);
+            if (matterCommentStart) {
+                /**
+                 * 单行有注释的开头，没有注释结尾
+                 * 这时候不解析后面的任何字符，直接返回，进入下一行的解析
+                 */
+                if (!isStartComment && /\/\*/g.test(nCode) && !/\*\//g.test(nCode)) {
+                    isStartComment = true;
+                    let commentStartRegToEnd = /(\/\*.*)/g;
+                    nCode = indentEle + nCode.replace(commentStartRegToEnd, "<span class='hl-code-multi-line-comment'>$1</span>");
+                    return nCode;
+                }
+
+                // let singleCommentReg = /(\/\*.*\*\/)/g;
+                //检测是否为单行注释, 中间不能有其它内容
+                /**
+                 *
+                 * @type {RegExp}
+                 */
+                let singleCommentReg = /^\s*?(\/\*((?!\*\/|\/\*).)+\*\/)\s*?$/g;
+                if (singleCommentReg.test(rawCode)) {
+                    nCode = rawCode.replace(singleCommentReg, "<span class='hl-code-one-line-comment'>$1</span>")
+                }
+
+            }
+
+            //进入了多行注释，但是注释还没结束, 直接返回
+            if (isStartComment && !commentEndReg.test(nCode)) {
+                nCode = indentEle + "<span class='hl-code-multi-line-comment'>" + nCode + "</span>";
+                return nCode;
+            }
+
+            //进入了多行注释，判断到结束字符，结束标签
+            if (isStartComment && /\*\//g.test(nCode)) {
+                let commentStartToEndReg = /(.*\*\/)/g;
+                isStartComment = false;
+                nCode = indentEle + nCode.replace(commentStartToEndReg, "<span class='hl-code-multi-line-comment'>$1</span>");
+                return nCode;
+            }
+
+
+            //高亮字符
+            // let str1Reg = /'([^']+)'/g;
+            let str1Reg = /&#39;(\\&#39;|\\&quot;|.{0,2})&#39;/g;
+            if (str1Reg.test(nCode)) {
+                nCode = nCode.replace(str1Reg, "<span class='hl-code-string'>'$1'</span>");
+            }
+
+            //高亮数字
+            //\b表示非字母数字与字母数字的边界。
+            //由于'会被转义成&#39, 我们不能高亮这个数字，否则会将&#39分割成 &#<span...>39</span> 网页就无法正确显示了
+            let numberReg = /([^#])\b(\d+)\b/g;
+            nCode = nCode.replace(numberReg, "$1<span class='hl-code-number'>$2</span>");
+
+
+            //高亮注解
+            let annoReg = /(@\b\w+\b)(\()?/g;
+            nCode = nCode.replace(annoReg, "<span class='hl-code-annotation'>$1</span>$2");
+
+
+            //高亮关键字
+            for (let i = 0; i < keywords.length; i++) {
+                //\\b边界限定
+                //为防止标签内的class和java关键字冲突，需要用[^=]排除class=的字段
+                let keyWordReg = new RegExp("\\b(" + keywords[i] + ")\\b([^=])", "g");
+
+                nCode = nCode.replace(keyWordReg, "<span class='hl-code-keyword'>$1</span>$2");
+            }
+
+            /**
+             * 匹配 字符串 '‘
+             * 字符串开头不能是=或者\w
+             * 字符串结束：只要遇到'就结束
+             * @type {RegExp}
+             */
+            // let strRegNoClass = /([^=\w])('[^']+')+/g;
+
+            /**
+             * 去除html剩余的东西
+             * 解释
+             * 分三段
+             *<[^>]+> html标签开头
+             *([^<>]+) html标签内容，不能有 < 或者 >出现
+             *<[^>]+> html标签结束
+             * @type {RegExp}
+             */
+            // let trimHtmlReg = /<[^>]+>([^<>]+)<[^>]+>/g;
+            // let trimHtmlReg = /<[^>/]+>([^<>]+)<[^>]+>/g;
+            // let trimHtmlReg = /<[^>/]+>([^<>]+)<\/[^>]+>/g;
+            // let trimHtmlReg = /(<[^>/]+>)([^<>]+)(<\/[^>]+>)/g;
+
+
+            // 高亮字符串
+            /**
+             * 解释：
+             * (&quot;)     引号开头
+             * (.*?[^\\])   任意内容，不贪婪匹配，直到遇到非转义符号(\)的时候停止
+             * (&quot;)     在转义符号后面必须有&quot;才匹配
+             * @type {RegExp}
+             */
+            let strReg = /(&quot;)(.*?[^\\])(&quot;)/g;
+            if (strReg.test(nCode)) {
+                // nCode = nCode.replace(strReg, "<span class='hl-code-string'>\"$1\"</span>");
+                // nCode = nCode.replace(strReg, "$1<span class='hl-code-string'>$2</span>$3");
+                nCode = nCode.replace(strReg, "<span class='hl-code-string'>$1$2$3</span>");
+            }
+
+
+            //高亮方法
+            let funReg = /\b([\w]+)\b\(/g;
+            let obj = funReg.exec(nCode);
+            if (obj) {
+                nCode = nCode.replace(funReg, "<span class='hl-code-function'>$1</span>(");
+            }
+
+
+            //高亮this后面的属性
+            let thisFieldReg = /(this<\/span>).([\w]+)/;
+            //如果不是方法, 则需要处理
+            nCode = nCode.replace(thisFieldReg, "$1.<span class='hl-code-field'>$2</span>");
+            // nCode = nCode.replace(thisFieldReg, "$1.<span class='hl-code-field'>$2</span>");
+
+
+            //高亮单行注释
+            //形式//
+            let singleCommentReg = /\/\/(.*)/g;
+            if (singleCommentReg.test(nCode)) {
+                //获取注释的字串
+                nCode = nCode.substring(0, nCode.indexOf("//")) + getTrimedHtml(nCode.substring(nCode.indexOf("//")));
+                nCode = nCode.replace(singleCommentReg, "<span class='hl-code-one-line-comment'>//$1</span>");
+                return nCode;
+            }
+
+            //加入开头的缩进
+            // nCode = indentEle + nCode;
+            return nCode;
+            // return (nCode == null || nCode.length === 0) ? rawCode : nCode;
         }
 
+        function parseJavaComment(nCode) {
+            //检测是否为单行注释
+            /**
+             * 单行有注释的开头，有注释结尾
+             *
+             */
+            let singleCommentReg = /(\/\*.*\*\/)/g;
+            if (singleCommentReg.test(nCode)) {
+                nCode = nCode.replace(singleCommentReg, "<span class='hl-code-one-line-comment'>$1</span>")
+            }
+            return nCode;
+        }
 
-        //高亮this后面的属性
-        let thisFieldReg = /(this<\/span>).([\w]+)/;
-        //如果不是方法, 则需要处理
-        nCode = nCode.replace(thisFieldReg, "$1.<span class='hl-code-field'>$2</span>");
-        // nCode = nCode.replace(thisFieldReg, "$1.<span class='hl-code-field'>$2</span>");
-
-
+        // //高亮字符
+        // // let str1Reg = /'([^']+)'/g;
+        // let str1Reg = /&#39;(\\&#39;|\\&quot;|.{0,2})&#39;/g;
+        // if (str1Reg.test(nCode)) {
+        //     nCode = nCode.replace(str1Reg, "<span class='hl-code-string'>'$1'</span>");
+        // }
         //
-        //     //高亮单行注释
+        //
+        // //高亮数字
+        // //\b表示非字母数字与字母数字的边界。
+        // //由于'会被转义成&#39, 我们不能高亮这个数字，否则会将&#39分割成 &#<span...>39</span> 网页就无法正确显示了
+        // let numberReg = /([^#])\b(\d+)\b/g;
+        // nCode = nCode.replace(numberReg, "$1<span class='hl-code-number'>$2</span>");
+        //
+        //
+        // //高亮注解
+        // let annoReg = /(@\b\w+\b)(\()?/g;
+        // nCode = nCode.replace(annoReg, "<span class='hl-code-annotation'>$1</span>$2");
+        //
+        //
+        // //高亮关键字
+        // for (let i = 0; i < keywords.length; i++) {
+        //     //\\b边界限定
+        //     //为防止标签内的class和java关键字冲突，需要用[^=]排除class=的字段
+        //     let keyWordReg = new RegExp("\\b(" + keywords[i] + ")\\b([^=])", "g");
+        //
+        //     nCode = nCode.replace(keyWordReg, "<span class='hl-code-keyword'>$1</span>$2");
+        // }
+        //
+        // /**
+        //  * 匹配 字符串 '‘
+        //  * 字符串开头不能是=或者\w
+        //  * 字符串结束：只要遇到'就结束
+        //  * @type {RegExp}
+        //  */
+        // // let strRegNoClass = /([^=\w])('[^']+')+/g;
+        //
+        // /**
+        //  * 去除html剩余的东西
+        //  * 解释
+        //  * 分三段
+        //  *<[^>]+> html标签开头
+        //  *([^<>]+) html标签内容，不能有 < 或者 >出现
+        //  *<[^>]+> html标签结束
+        //  * @type {RegExp}
+        //  */
+        // // let trimHtmlReg = /<[^>]+>([^<>]+)<[^>]+>/g;
+        // // let trimHtmlReg = /<[^>/]+>([^<>]+)<[^>]+>/g;
+        // // let trimHtmlReg = /<[^>/]+>([^<>]+)<\/[^>]+>/g;
+        // // let trimHtmlReg = /(<[^>/]+>)([^<>]+)(<\/[^>]+>)/g;
+        //
+        //
+        // // 高亮字符串
+        // /**
+        //  * 解释：
+        //  * (&quot;)     引号开头
+        //  * (.*?[^\\])   任意内容，不贪婪匹配，直到遇到非转义符号(\)的时候停止
+        //  * (&quot;)     在转义符号后面必须有&quot;才匹配
+        //  * @type {RegExp}
+        //  */
+        // let strReg = /(&quot;)(.*?[^\\])(&quot;)/g;
+        // if (strReg.test(nCode)) {
+        //     // nCode = nCode.replace(strReg, "<span class='hl-code-string'>\"$1\"</span>");
+        //     // nCode = nCode.replace(strReg, "$1<span class='hl-code-string'>$2</span>$3");
+        //     nCode = nCode.replace(strReg, "<span class='hl-code-string'>$1$2$3</span>");
+        // }
+        //
+        //
+        // //高亮方法
+        // let funReg = /\b([\w]+)\b\(/g;
+        // let obj = funReg.exec(nCode);
+        // if (obj) {
+        //     nCode = nCode.replace(funReg, "<span class='hl-code-function'>$1</span>(");
+        // }
+        //
+        //
+        // //高亮this后面的属性
+        // let thisFieldReg = /(this<\/span>).([\w]+)/;
+        // //如果不是方法, 则需要处理
+        // nCode = nCode.replace(thisFieldReg, "$1.<span class='hl-code-field'>$2</span>");
+        // // nCode = nCode.replace(thisFieldReg, "$1.<span class='hl-code-field'>$2</span>");
+        //
+        //
+        //
+        // //高亮单行注释
+        // //形式//
         // let singleCommentReg = /\/\/(.*)/g;
-        // if (singleCommentReg.test(rawCode)) {
+        // if (singleCommentReg.test(nCode)) {
         //     //获取注释的字串
         //     nCode = nCode.substring(0, nCode.indexOf("//")) + getTrimedHtml(nCode.substring(nCode.indexOf("//")));
         //     nCode = nCode.replace(singleCommentReg, "<span class='hl-code-one-line-comment'>//$1</span>");
-        //     return (nCode == null || nCode.length === 0) ? rawCode : nCode;
+        //     return indentEle + nCode;
         // }
-
-        //高亮单行注释
-        //形式//
-        let singleCommentReg = /\/\/(.*)/g;
-        if (singleCommentReg.test(nCode)) {
-            //获取注释的字串
-            nCode = nCode.substring(0, nCode.indexOf("//")) + getTrimedHtml(nCode.substring(nCode.indexOf("//")));
-            nCode = nCode.replace(singleCommentReg, "<span class='hl-code-one-line-comment'>//$1</span>");
-            return indentEle + nCode;
-        }
-
-        //加入开头的缩进
-        nCode = indentEle + nCode;
-        return (nCode == null || nCode.length === 0) ? rawCode : nCode;
+        //
+        // //加入开头的缩进
+        // nCode = indentEle + nCode;
+        // return (nCode == null || nCode.length === 0) ? rawCode : nCode;
     }
 
     /**
