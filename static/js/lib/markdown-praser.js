@@ -312,6 +312,7 @@ function parseLine(singleLine) {
     let hlReg = /(^|[^\\])==([^=]*?)==/g;
     if (hlReg.test(singleLine)) {
         singleLine = singleLine.replace(hlReg, "$1<span style='background: yellow'>$2</span>");
+        //TODO bug: 当转义时，会被识别为plain text, 应该封装一层span plain-text
         singleLine = singleLine.replace(/\\=/g, "=");
     }
 
@@ -381,6 +382,11 @@ function parseLine(singleLine) {
     }
 
 
+    //TODO 检测多行空行变成一行
+    if (singleLine.trim().length === 0&&emptyLineCount <= 1) {
+        emptyLineCount++;
+        return "<br/>"
+    }
 
     /**
      * 没有被标签封装，说明是纯文本
@@ -389,9 +395,13 @@ function parseLine(singleLine) {
     let plainTextReg = /^\s*</g;
     let temLine = singleLine.trim();
     if (temLine.length > 0 && !plainTextReg.test(temLine)) {
-        singleLine = "<p class='plain-text'>" + singleLine + "</p>";
+        emptyLineCount = 0;
+        // singleLine = "<p class='plain-text'>" + singleLine + "</p>";
+        singleLine = "<span class='plain-text'>" + singleLine + "</span>";
     }
 
     return singleLine;
 }
+//检测多行空行变成一行
+let emptyLineCount = 0;
 

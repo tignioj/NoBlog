@@ -1,60 +1,25 @@
 body {
     /*background-color: #E8EAF6;*/
-    font-family: Roboto, Noto, Helvetica, Arial, sans-serif;
-    /*font-size: 24px;*/
-}
-
-/*清除默认样式*/
-h1,h2,h3,h4,h5,p {
-    margin: 0;
-}
-
-#app {
+    font-family: "微软雅黑", Roboto, Noto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
 }
 
 /*markdonw解析后显示的地方*/
 #content {
-    padding: 50px;
-    background-color: ghostwhite;
+    padding: 10px;
+    /*background-color: ghostwhite;*/
+    /*border: 1px solid red;*/
+
+    /*居中技巧*/
+    max-width: 10000px;
+    /*width: 70%;*/
+    margin: auto;
+
 }
-
-/*当屏幕段都大于1024执行的css*/
-@media only screen and (min-width: 1024px) {
-    /*markdown区域*/
-    #content {
-        /*background-color: #fa6125;*/
-        /*border: 1px solid red;*/
-        border-radius: 0.5em;
-
-        /*居中技巧*/
-        max-width: 1000px;
-        width: 60%;
-        margin: auto;
-    }
-}
-/*适配手机*/
-/*@media only screen and (max-width: 760px) and (orientation: landscape)  {*/
-/*    body {*/
-/*        background-color: red;*/
-/*    }*/
-/*}*/
-
-
-
-
-/*缩进框下的ol*/
- .block-frame ol {
-    overflow: auto;
-    padding: 1em;
-    margin: 0;
-}
-
 
 
 /*缩进框*/
 .block-frame {
-    padding: 0.1em;
-    margin: 0.2em;
     border-radius: 0.5em;
     background: lightgray;
 }
@@ -64,33 +29,33 @@ h1,h2,h3,h4,h5,p {
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
 }
 
-
+/*缩进框下的ol*/
+.block-frame ol {
+    overflow: auto;
+    margin: 0;
+    padding: 20px;
+    list-style-type: none;
+}
+/*缩进框下的*/
 .block-frame li {
     font-family: monospace;
 }
-.block-frame ol {
-    list-style-type: none;
-}
 
-/*.block-frame li :hover {*/
-/*    background-color: papayawhip;*/
-/*}*/
 
-.header {
-    font-weight: bold;
-}
 
+/*引用框*/
 .quote-frame {
     /*background-color: #E8EAF6;*/
     border-radius: 0.5em;
 }
 
 /*引用框下的ol*/
-.quote-frame ol{
-    list-style-type: none;
+.quote-frame ol {
     /*padding: 1em;*/
+    padding: 10px 10px 10px 0;
     overflow: auto;
 }
+
 /*引用框内的每一行*/
 .quote-line {
     display: flex;
@@ -100,41 +65,63 @@ h1,h2,h3,h4,h5,p {
 .quote-line-filler {
     /*background: darkgray;*/
     /*background-color : rgba(0,0,0,0.1);*/
-    border-right: 0.3em solid rgba(0,0,0,0.1);
+    border-right: 0.3em solid rgba(0, 0, 0, 0.1);
     padding-left: 1em;
     margin-right: 1em;;
 }
 
-
+/*无序list*/
 .plain-list {
     list-style: none;
-}
-.plain-list-indicator {
-}
-
-.header, .plain-list, .quote-line-filler, .plain-text{
-    font-family: "微软雅黑", serif;
-    /*padding: 1.1em 1.1em 1.1em 0;*/
-    /*padding: 0.8em 0.8em 0.8em 0;*/
-    /*padding: 0.5em 0.5em 0.5em 0;*/
-    padding: 0.2em 0.2em 0.2em 0;
+    margin: 10px 0 0 0;
+    padding: 0;
 }
 
-/*h1 {*/
-/*    font-size: 2.7em;*/
-/*}*/
-/*h2 {*/
-/*    font-size: 2.2em;*/
-/*}*/
-/*h3 {*/
-/*    font-size: 1.9em;*/
-/*}*/
-/*h4 {*/
-/*    font-size: 1.5em;*/
-/*}*/
-/*h5 {*/
-/*    font-size: 1.2em;*/
-/*}*/
-/*p , .plain-list, .plain-text{*/
-/*    font-size: 1em;*/
-/*}*/
+/*所有的标题*/
+.header {
+}
+
+
+
+/*纯文本*/
+.plain-text {
+    line-height: 2;
+    margin: 15px 0 0 0;
+}
+
+
+/*!*当屏幕段都大于1024执行的css*!*/
+@media only screen and (min-width: 1024px) {
+    /*markdown区域*/
+    #content {
+        /*background-color: #fa6125;*/
+        /*border: 1px solid red;*/
+        /*border-radius: 0.5em;*/
+
+
+    }
+}
+
+/* For desktop: */
+.col-1 {width: 8.33%;}
+.col-2 {width: 16.66%;}
+.col-3 {width: 25%;}
+.col-4 {width: 33.33%;}
+.col-5 {width: 41.66%;}
+.col-6 {width: 50%;}
+.col-7 {width: 58.33%;}
+.col-8 {width: 66.66%;}
+.col-9 {width: 75%;}
+.col-10 {width: 83.33%;}
+.col-11 {width: 91.66%;}
+.col-12 {width: 100%;}
+
+@media only screen and (max-width: 768px) {
+    /* For mobile phones: */
+    /*[class*="col-"] {*/
+    /*    width: 100%;*/
+    /*}*/
+    #content {
+        width: 90%;
+    }
+}
