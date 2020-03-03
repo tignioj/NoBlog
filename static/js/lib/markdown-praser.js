@@ -62,6 +62,7 @@ function markdownParse(str) {
         let multiBlockBegin = false;
         let i = currentIndex;
 
+
         /**
          * 判断是否为结束行
          * 判断方法：
@@ -72,7 +73,11 @@ function markdownParse(str) {
          *
          * @param line
          */
-        function isEndingLineOfBlock(line) {
+        function isEndingLineOfBlock(line, fullArray, currentIndex) {
+            if (fullArray.length-1 === currentIndex) {
+                return true;
+            }
+
             let randomCharButNotEmptyReg = /[^ ]/g;
             let charIndex = line.search(randomCharButNotEmptyReg);
             if (charIndex < 4 && line.trim().length !== 0) {
@@ -130,8 +135,10 @@ function markdownParse(str) {
                  * 这里第1行前面四个字符是空白，但是不是空行，因为后面有a，所以不结束
                  * 第2行前面四个字符中，第三个字符是a，所以应该结束
                  * 第3行完全空行，前面也没有字符,也没有空格，所以不该结束
+                 *
+                 * 2. 判断文章是否到达了底部
                  */
-                if (isEndingLineOfBlock(line)) {
+                if (isEndingLineOfBlock(line, fullArray, i)) {
                     multiBlockBegin = false;
                     //清除冗余行
                     for (let j = 0; j < emptyLineCountOfEnding; j++) {
@@ -156,7 +163,7 @@ function markdownParse(str) {
                     emptyLineCountOfEnding++;
                 } else {
                     //如果不是结束行，则置空
-                    if (!isEndingLineOfBlock(line)) {
+                    if (!isEndingLineOfBlock(line,fullArray, i)) {
                         emptyLineCountOfEnding = 0;
                     }
                 }
@@ -248,6 +255,9 @@ function markdownParse(str) {
  * @returns {string|*}
  */
 function parseLine(singleLine) {
+    if (singleLine === undefined || singleLine === null) {
+        return "";
+    }
     let index = singleLine.indexOf("#");
     if (index !== -1) {
         singleLine = parseHeader(singleLine);
