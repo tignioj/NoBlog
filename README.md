@@ -9,10 +9,11 @@
 ## usage2
 not yet.
 
-
-
 # TODO
 - [x] add support for nothing.
 - [x]  escape.
-- [ ]  todo list.
+- [x]  todo list.
+- [ ] change unordered list style
+- [ ] ordered list
+- [ ] anchor of title
 - [ ] indicator

@@ -258,13 +258,34 @@ function parseLine(singleLine) {
     if (singleLine === undefined || singleLine === null) {
         return "";
     }
-    let index = singleLine.indexOf("#");
-    if (index !== -1) {
+    // let index = singleLine.indexOf("#");
+    // if (index !== -1) {
+    //     singleLine = parseHeader(singleLine);
+    // }
+    let headerReg = /^\s*#/g;
+    if (headerReg.test(singleLine)) {
         singleLine = parseHeader(singleLine);
+    }
+    //转义
+    singleLine = singleLine.replace(/\\#/g, "#");
+
+    // todo 清单
+    // - [ ]
+    // - [x]
+    //清单需要自动换行
+    let todoReg = /^\s{0,3}-\s\[\s\](.*)/g;
+    if (todoReg.test(singleLine)) {
+        singleLine = singleLine.replace(todoReg, "<input class='md-todo-uncheck' type='checkbox' disabled />$1<br/>");
+    }
+
+    let todoFinishedReg = /^\s{0,3}-\s\[x\](.*)/g;
+    if (todoFinishedReg.test(singleLine)) {
+        singleLine = singleLine.replace(todoFinishedReg, "<input class='md-todo-checked' type='checkbox' disabled  checked/>$1<br/>")
     }
 
 
-    //\s任意空格加-开头,
+
+    //\s任意空格加-开头, Tab加-格式化无需列表
     let liReg = /^\s*\\?-(?!-)/g;
     if (liReg.test(singleLine)) {
         //判断前面是否有转义符号
@@ -276,13 +297,24 @@ function parseLine(singleLine) {
             //字符大区
             //https://www.cnblogs.com/mengmengi/p/10137167.html
             //TODO 更换字符
-            let styles = ["&bull;", "&deg;", "&diams;", "&loz;"];
+            //https://www.w3school.com.cn/tiy/t.asp?f=csse_list-style
+
+            // • &bull;
+            // ° &deg;
+            // ♦ &diams;    不推荐, 不同浏览器显示效果不一样
+            // ◊ &loz;
+            //
+            let styles = ["&bull;", "&deg;"];
+            // let styles = ["&bull;", "&deg;", "&diams;", "&loz;"];
             let spaceLen = singleLine.substring(0, singleLine.indexOf("-")).length;
-            let style = styles[(spaceLen / 4) % 4];
+            let style = styles[(spaceLen / 4) % styles.length];
             let retractEle = "<span class='plain-list-indicator' style='padding-left: " + ((spaceLen / 4) * 20) + "px;'>" + style + "</span>";
             singleLine = "<li class='plain-list'>" + retractEle + singleLine.substring(singleLine.indexOf("-") + 1) + "</li>";
         }
     }
+    singleLine = singleLine.replace(/\\-/g, "-");
+
+    //TODO 有序列表
 
     //图像
     // let teststr = "![abc](http://img.wszjl.com/images/background/jpg/22.jpg)";
@@ -305,16 +337,20 @@ function parseLine(singleLine) {
 
 
     //链接[]()
-    let lnReg = /(.*)\[(.*)\]\((.*)\)(.*)/g;
-    singleLine = singleLine.replace(lnReg, "$1<a href=\'$3\' >$2</a>$4");
+    // let lnReg = /(.*)\[(.*)\]\((.*)\)(.*)/g;
+    let lnReg =/\[([^\]]*?)\]\((.*?)\)/g;
+    if (lnReg.test(singleLine)) {
+        singleLine = singleLine.replace(lnReg, "<a href=\'$2\' >$1</a>");
+    }
+
 
     //高亮==
     let hlReg = /(^|[^\\])==([^=]*?)==/g;
     if (hlReg.test(singleLine)) {
         singleLine = singleLine.replace(hlReg, "$1<span style='background: yellow'>$2</span>");
-        //TODO bug: 当转义时，会被识别为plain text, 应该封装一层span plain-text
-        singleLine = singleLine.replace(/\\=/g, "=");
+        // singleLine = singleLine.replace(/\\=/g, "=");
     }
+    singleLine = singleLine.replace(/\\=/g, "=");
 
     //斜体*
     //正则的断言
@@ -338,26 +374,29 @@ function parseLine(singleLine) {
 
         //把反义符号去掉
         // singleLine = singleLine.replace(/(\\\*)/g, "*");
-        singleLine = singleLine.replace(/(\\\*)/g, "*");
+        // singleLine = singleLine.replace(/(\\\*)/g, "*");
     }
+    singleLine = singleLine.replace(/(\\\*)/g, "*");
 
 
-    let delReg = /([^\\])~~(.*)~~/g;
+    let delReg = /([^\\])~~(.*?)~~/g;
     if (delReg.test(singleLine)) {
         singleLine = singleLine.replace(delReg, "$1<span class='md-del'>$2</span>");
 
         /*把反义符号去掉*/
-        singleLine = singleLine.replace(/\\~/g, "~");
+        // singleLine = singleLine.replace(/\\~/g, "~");
     }
+    singleLine = singleLine.replace(/\\~/g, "~");
 
     //下划线++
-    let undReg = /(^|[^\\])\+\+(.*)\+\+/g;
+    let undReg = /(^|[^\\])\+\+(.*?)\+\+/g;
     if (undReg.test(singleLine)) {
         singleLine = singleLine.replace(undReg, "$1<span class='md-underline'>$2</span>");
 
         /*把反义符号去掉*/
-        singleLine = singleLine.replace(/\\\+/g, "+");
+        // singleLine = singleLine.replace(/\\\+/g, "+");
     }
+    singleLine = singleLine.replace(/\\\+/g, "+");
 
 
     // //单行代码解析``
@@ -378,11 +417,16 @@ function parseLine(singleLine) {
             // return "<span class='code code-single-frame'>" + escapeCode(ch, false) + "</span>";
             return firstChar + "<span class='code code-single-frame'>" + ch + "</span>";
         });
-        singleLine = singleLine.replace(/\\`/g, "`");
+        // singleLine = singleLine.replace(/\\`/g, "`");
     }
+    singleLine = singleLine.replace(/\\`/g, "`");
 
 
-    //TODO 检测多行空行变成一行
+
+    //转义\\成为\
+    singleLine = singleLine.replace(/\\\\/g, "\\");
+
+    // 检测多行空行变成一行
     if (singleLine.trim().length === 0&&emptyLineCount <= 1) {
         emptyLineCount++;
         return "<br/>"
