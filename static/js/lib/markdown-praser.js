@@ -300,7 +300,7 @@ function parseLine(singleLine) {
 
     //高亮==
     let hlReg = /(^|[^\\])==([^=]*?)==/g;
-    if (hlReg) {
+    if (hlReg.test(singleLine)) {
         singleLine = singleLine.replace(hlReg, "$1<span style='background: yellow'>$2</span>");
         singleLine = singleLine.replace(/\\=/g, "=");
     }
@@ -321,10 +321,12 @@ function parseLine(singleLine) {
         singleLine = singleLine.replace(/(^|[^\\])\*\*([^* ])(.*?)\*\*/g, "$1<span class='md-strong'>$2$3</span>");
 
         //斜体
-        let emReg = /(^|[^\\])\*([^ ])(.*?)(\*?)\*([^*]|$)/g;
-        singleLine = singleLine.replace(emReg, "$1<span class='md-italic'>$2$3</span>$4");
+        let emReg = /(^|[^\\])\*([^ ])([^*]*?)(\*)/g;
+        // let emReg = /(^|[^\\])\*([^ ])(.*?)\*([^*]|$)/g;
+        singleLine = singleLine.replace(emReg, "$1<span class='md-italic'>$2$3</span>");
 
         //把反义符号去掉
+        // singleLine = singleLine.replace(/(\\\*)/g, "*");
         singleLine = singleLine.replace(/(\\\*)/g, "*");
     }
 

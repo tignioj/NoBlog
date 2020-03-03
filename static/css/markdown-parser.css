@@ -5,8 +5,8 @@
 
 /*斜体*/
 .md-italic {
-    /*font-style: italic;*/
-    font-style: oblique;
+    font-style: italic;
+    /*font-style: oblique;*/
     color: red;
 }
 
