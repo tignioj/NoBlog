@@ -126,6 +126,7 @@ function BlockParser(arr) {
         // line = higlightCode(line, "default");
 
 
+        let lineEle = "";
         //显示空行的li标签
         if (line.trim().length === 0) {
             lineEle = "<li class='block-line' style='visibility: hidden'>&nbsp</li>";
@@ -166,7 +167,7 @@ function QuoteParser(arr) {
         noQuoteLine = parseLine(noQuoteLine);
         line = prefix + noQuoteLine;
 
-        let lineEle = "<li class='quote-line'>" + line + "</li>";
+        let lineEle = "<li class='quote-line'>" + line + "</li>" + "\n\n";
         this.quoteEle += lineEle;
     }
     this.quoteEle += "</ol>";

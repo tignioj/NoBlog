@@ -327,7 +327,7 @@ function parseLine(singleLine) {
         //填充物的宽度
         let retractEle = "<span class='unordered-list-indicator' style='padding-left: " + ((spaceLen / 4) * 20) + "px;'>" + style + "</span>";
 
-        singleLine = "<li class='unordered-list'>" + retractEle + singleLine.substring(spaceLen + 1) + "</li>";
+        singleLine = "<p class='unordered-list'>" + retractEle + singleLine.substring(spaceLen + 1) + "</p>";
     }
     singleLine = singleLine.replace(/(\\-|\\\+|\\\*)/g, "$1");
 
@@ -378,9 +378,11 @@ function parseLine(singleLine) {
         let style = getPrefix() + levelCount;
 
         //填充物的宽度
-        let retractEle = "<span class='unordered-list-indicator' style='padding-left: " + ((spaceLen / 4) * 20) + "px;'>" + style + "</span>";
+        let retractEle = "<span class='ordered-list-indicator' style='padding-left: " + ((spaceLen / 4) * 20) + "px;'>" + style + "</span>";
 
-        singleLine = "<li class='unordered-list'>" + retractEle + singleLine.substring(spaceLen + 1) + "</li>";
+        // singleLine = "<li class='ordered-list'>" + retractEle + singleLine.substring(spaceLen + 1) + "</li>";
+        // singleLine = "<span class='ordered-list'>" + retractEle + singleLine.substring(spaceLen + 1) + "</span><br/>";
+        singleLine = "<p class='ordered-list'>" + retractEle + singleLine.substring(spaceLen + 1) + "</p>";
 
         //当前level递增
         parseLine.orderedListCountByLevelMap.set(level, levelCount + 1);
