@@ -10,45 +10,83 @@ function markdownParse(str) {
     let singleLine = "";
 
     /**
-     * 检测是否为多行代码，如果是则封装到html,并返回处理后的下标
+     * 封装代码块
      * @param currentIndex
      * @param fullArray
      * @returns {*}
      */
     function wrapMultiCode(currentIndex, fullArray) {
-        let multiLineArr = [];
-        let multiLineBegin = false;
-        let i = currentIndex;
+        //如果判断到代码开始的标记，则传入判断结束的函数和解析所用函数给wrapMulti, wrapMulti负责收集, 第三个参数(parseFunction)用于解析
+        if (/^\s*```/g.test(fullArray[currentIndex])) {
+            return wrapMulti(currentIndex,
+                function (currentIndex, currentLine) {
+                    return (currentLine.match(/^\s*```/g));
+                },
+                function (arr) {
+                    return parseMultiLineArr(arr, true);
+                });
+        }
+        return currentIndex;
+    }
 
-        for (; i < fullArray.length; i++) {
-            let line = fullArray[i];
-            if (multiLineBegin === false && line.match(/^```/g)) {
-                multiLineBegin = true;
-                multiLineArr.push(line);
-                continue;
-            }
+    /**
+     * 一个解析多行代码的接口
+     * @param currentIndex 当前解析到的行数
+     * @param fullArray 整个文章按照行数切割形成的数组
+     * @param isMultiEndDetectFunction 判断结束的方法，要求外界调用者传入
+     * @param parseFunction 调用哪个解析的方法
+     */
+    function wrapMulti(currentIndex, isMultiEndDetectFunction, parseFunction) {
+        //解析后的html
+        let afterParsedIndex = currentIndex;
 
-            //如果mtarr里面有东西,说明开启了多行代码解析，此时判断是否结束多行
-            if (multiLineArr.length > 0) {
-                //如果在开启了代码解析的情况下还检测到了```,则应该结束了
-                if (line.match(/```/g)) {
-                    multiLineBegin = false;
-                    multiLineArr.push(line);
-                    //高亮代码
-                    html += parseMultiLineArr(multiLineArr, true);
-                    multiLineArr = [];
-                    continue;
-                } else {
-                    //否则需要继续添加
-                    multiLineArr.push(line);
-                    continue;
+        //待解析的数组
+        let preArr = [];
+
+        //结尾的冗余行数量
+        let emptyLineCountOfEnding = 0;
+
+        /*把第一行存入，因为可能有一些必要的信息，比如```java中的java*/
+        preArr.push(arry[currentIndex]);
+
+        //进入多行解析的表直
+        for (let i = currentIndex + 1; i < arry.length; i++) {
+
+            //当前行
+            let currentBlockLine = arry[i];
+
+            //调用回调函数判断是否结束行
+            let isEndLine = isMultiEndDetectFunction(i, currentBlockLine, arry);
+
+
+            //判断是否为空行
+            if (currentBlockLine.trim().length === 0) {
+                emptyLineCountOfEnding++;
+            } else {
+                if (!isEndLine) {
+                    emptyLineCountOfEnding = 0;
                 }
             }
 
-            break;
+            //如果检测到结束了，就把数组送到相应的方法去解析
+            if (isEndLine) {
+                //去掉冗余的行
+                for (let j = 0; j < emptyLineCountOfEnding; j++) {
+                    preArr.pop();
+                }
+                preArr.push(currentBlockLine);
+                html += parseFunction(preArr);
+                afterParsedIndex = i + 1;
+                break;
+            }
+
+
+            /*结束行也存入*/
+            preArr.push(currentBlockLine);
+
         }
-        return i;
-    }
+        return afterParsedIndex;
+    };
 
     /**
      * 封装多行block
@@ -57,49 +95,7 @@ function markdownParse(str) {
      * @param fullArray
      */
     function wrapMutliBlock(currentIndex, fullArray) {
-        let multiBlockArr = [];
-        let multiBlockBegin = false;
-        let i = currentIndex;
-
-        /**
-         * 判断是否为Block的结束行
-         * 判断方法：
-         *  当前行首四个字符是空格以外的其它字符（也就是没有Tab缩进
-         *  但是无法做到一个正则可以判断首行前面四个字符是否有空格以外的字符，因此需要转换思路
-         *      1. 利用search方法搜索空格以外的字符[^ ]，搜到的任意一字符如果其位置<4,说明它是结束行
-         *      2. 需要注意的是，这个方法搜索到空字符是返-1
-         *
-         * @param line 当前遍历行
-         * @param fullArray 整篇文章的数组
-         * @param currentIndex 当前遍历到的下标
-         */
-        function isEndingLineOfBlock(line, fullArray, currentIndex) {
-            //如果判断到当前行已经是文章的最后一行，则认为结束
-            if (fullArray.length - 1 === currentIndex) {
-                return true;
-            }
-
-            let randomCharButNotEmptyReg = /[^ ]/g;
-            //寻找整行的第一个非空白字符，如果该非空白字符位置<4, 认为不足一个Tab, 则结束之, 除非当前行为空白行
-            let charIndex = line.search(randomCharButNotEmptyReg);
-            if (charIndex < 4 && line.trim().length !== 0) {
-                // if (charIndex < 4 && line.trim().length !== 0) {
-                return true;
-            }
-            return false;
-        }
-
-        /**
-         * 判断是否为Block的开始行，需要检测多行
-         * 检测方法：
-         *  当前行为空行
-         *  下一行不是空行，而且必须有一个Tab（即四个空格在开头）
-         * @param fullArray
-         * @param i
-         * @returns {boolean|boolean}
-         */
-        function isStartLineOfBlock(fullArray, i) {
-
+        function isStartLineOfBlock() {
             //检测是否为空行
             let emptyLineReg = /^\s*$/g;
             /**
@@ -107,147 +103,120 @@ function markdownParse(str) {
              * @type {RegExp}
              */
             let hasSpaceFirstWithAnyContent = /^\s{4,}.[^ ]/g;
-            return emptyLineReg.test(fullArray[i]) && hasSpaceFirstWithAnyContent.test(fullArray[i + 1])
+            return emptyLineReg.test(fullArray[currentIndex]) && hasSpaceFirstWithAnyContent.test(fullArray[currentIndex + 1]);
         }
 
-        //处理结束冗余空行的计数器
-        let emptyLineCountOfEnding = 0;
-
-
-        for (; i < fullArray.length; i++) {
-            let line = fullArray[i];
-
-            // 如果还么有开始进入板块， 则从当前行开始判断是否为开始行
-            if (!multiBlockBegin && isStartLineOfBlock(fullArray, i)) {
-                multiBlockBegin = true;
-                multiBlockArr.push(line);
-                continue;
-            }
-
-            //如果mtarr里面有东西,说明开启了多行代码解析
-            if (multiBlockArr.length > 0) {
-                //如果开头前4个位置有字符（而不是空格), 而且不是空行 就结束
-                /**
-                 * 判断结束板块的方法：
-                 * 1. 判断当前行最前面四个字符是否有空格以外的字符，
-                 * 如果有，而且不是空行，则说明结束板块了
-                 * 比如
-                 * 第1行        |     a
-                 * 第2行        |  ab
-                 * 第3行        |(这里没有空格,是空行)
-                 * 这里第1行前面四个字符是空白，但是不是空行，因为后面有a，所以不结束
-                 * 第2行前面四个字符中，第三个字符是a，所以应该结束
-                 * 第3行完全空行，前面也没有字符,也没有空格，所以不该结束
-                 *
-                 * 2. 判断文章是否到达了底部
-                 */
-                if (isEndingLineOfBlock(line, fullArray, i)) {
-                    multiBlockBegin = false;
-                    //清除冗余行
-                    for (let j = 0; j < emptyLineCountOfEnding; j++) {
-                        multiBlockArr.pop();
+        if (isStartLineOfBlock()) {
+            return wrapMulti(
+                currentIndex,
+                function (currentIndex, currentLine, fullArray) {
+                    /** 判断是否为Block的结束行
+                     * 判断方法：
+                     *  当前行首四个字符是空格以外的其它字符（也就是没有Tab缩进
+                     *  但是无法做到一个正则可以判断首行前面四个字符是否有空格以外的字符，因此需要转换思路
+                     *      1. 利用search方法搜索空格以外的字符[^ ]，搜到的任意一字符如果其位置<4,说明它是结束行
+                     *      2. 需要注意的是，这个方法搜索到空字符是返-1
+                     *
+                     * @param currentLine 当前遍历行
+                     * @param fullArray 整篇文章的数组
+                     * @param currentIndex 当前遍历到的下标
+                     */
+                    // function isEndingLineOfBlock(line, fullArray, currentIndex) {
+                    //      function isEndingLineOfBlock(line, fullArray, currentIndex) {
+                    //如果判断到当前行已经是文章的最后一行，则认为结束
+                    if (fullArray.length - 1 === currentIndex) {
+                        return true;
                     }
-                    html += parseBlock(multiBlockArr);
-                    multiBlockArr = [];
-                    break;
-                }
 
-
-                /**
-                 * 除去结尾冗余空行的一些准备
-                 * 当检测到空行，就开始计数
-                 * 如果不是空行，判断是不是结束了
-                 * 如果结束了，就保存技术
-                 * 如果还么结束，则置为0
-                 * 最后需要在block结束方法处调用pop()方法清除冗余行
-                 * @type {number}
-                 */
-                if (line.trim().length === 0) {
-                    emptyLineCountOfEnding++;
-                } else {
-                    //如果不是结束行，则置空
-                    if (!isEndingLineOfBlock(line, fullArray, i)) {
-                        emptyLineCountOfEnding = 0;
+                    let randomCharButNotEmptyReg = /[^ ]/g;
+                    //寻找整行的第一个非空白字符，如果该非空白字符位置<4, 认为不足一个Tab, 则结束之, 除非当前行为空白行
+                    let charIndex = currentLine.search(randomCharButNotEmptyReg);
+                    if (charIndex < 4 && currentLine.trim().length !== 0) {
+                        return true;
                     }
+                    return false;
+                },
+                function (arr) {
+                    return parseBlock(arr)
                 }
-
-                //逐行添加到待处理的block数组中
-                multiBlockArr.push(line);
-                continue;
-            }
-
-            // 这种情况就是当前未解析到block,直接结束循环
-            break;
+            )
         }
-
-
-        return i;
+        return currentIndex;
     }
 
     function wrapMultiQuote(currentIndex, fullArray) {
-        let multiQuoteArr = [];
-        let multiQuoteBegin = false;
-        let i = currentIndex;
-
-        let blockReg = /^\s{0,}([>]{1,})(.*)/g;
-
-        for (; i < fullArray.length; i++) {
-
-            let line = fullArray[i];
-            // if (multiBlockBegin === false && line.match(/^```/g)) {
-            if (!multiQuoteBegin && blockReg.test(line)) {
-                multiQuoteBegin = true;
-                multiQuoteArr.push(line);
-                continue;
-            }
-
-            //如果mtarr里面有东西,说明开启了多行代码解析，此时判断是否结束多行
-            if (multiQuoteArr.length > 0) {
-                //空白行退出
-                if (/^\s{0,}$/g.test(line)) {
-                    multiQuoteBegin = false;
-                    multiQuoteArr.push(line);
-                    let quoteEle = parseQuote(multiQuoteArr);
-                    html += quoteEle;
-                    multiQuoteArr = [];
-                    continue;
-                } else {
-                    //否则需要继续添加
-                    multiQuoteArr.push(line);
-                    continue;
-                }
-            }
-            break;
+        function isQuoteStart() {
+            //空白行退出
+            return /^\s{0,}([>]{1,})(.*)/g.test(fullArray[currentIndex]);
         }
-        return i;
+
+        if (isQuoteStart()) {
+            return wrapMulti(
+                currentIndex,
+                function (currentIndex, currentLine)  {
+                    return /^\s{0,}$/g.test(currentLine);
+                },
+                function(arr)  {
+                    return parseQuote(arr);
+                }
+            );
+        }
+        return currentIndex;
     }
 
-    for (let i = 0; i < arry.length; i++) {
-        //当开启多行时，不因该再进入这里，因为结束也是```
-        //     开头，防止结束的时候再次进入这里
 
-        //跳过检测到为多行代码格式的文本
+    for (let i = 0; i < arry.length; i++) {
+
+        /**
+         * 自定义解析多行类型示例
+         */
+        if (/^abc-/g.test(arry[i])) {
+            i = wrapMulti(
+                i,
+
+                /*传入一个判断结束的函数*/
+                function (currentIndex, currentLine) {
+                    let startRegex = /^abc-/g;
+                    if (startRegex.test(currentLine)) {
+                        return true;
+                    }
+                    return false;
+                },
+                /*传入一个解析器*/
+                function (arr) {
+                    let afterParsedHtml = "<button onclick='toggle(document.getElementById(\"custom\"))'>收缩</button>";
+                    afterParsedHtml += "<div id='custom' style='background-color: grey'>";
+                    for (let j = 0; j < arr.length; j++) {
+                        let currentLine = arr[j];
+                        currentLine = currentLine.trim().length === 0 ? "&nbsp" : currentLine;
+                        afterParsedHtml += "<p>" + currentLine + "</p>";
+                    }
+                    afterParsedHtml += "</div>";
+                    return afterParsedHtml;
+                }
+            );
+        }
+
+        //====================处理多行==========开始
+        //代码
         i = wrapMultiCode(i, arry);
 
         //跳过检测到为空行+缩进 block的文本
         i = wrapMutliBlock(i, arry);
 
+        //引用
         i = wrapMultiQuote(i, arry);
+        //====================处理多行==========结束
 
 
+        //处理单行
         singleLine = arry[i];
-
-
-        //非代码需要进行转义 < > &等
         singleLine = parseLine(singleLine);
-
-
         html += singleLine
     }
 
-
-    //解析完成，返回MarkedHtml对象
-    // markedHtml.indicator = indicator;
+//解析完成，返回MarkedHtml对象
+// markedHtml.indicator = indicator;
     return new MarkedHtml(html);
 }
 
@@ -554,4 +523,9 @@ function parseLine(singleLine) {
     }
 
     return singleLine;
+}
+
+function toggle(element) {
+    let display = element.style.display;
+    element.style.display = display === ("" || "none") ? "block" : "none";
 }

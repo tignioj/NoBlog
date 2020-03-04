@@ -1,4 +1,9 @@
-function MultiLineParser(arr, isMultiLine) {
+/**
+ * 解析代码
+ * @param arr
+ * @constructor
+ */
+function MultiLineParser(arr) {
     if (arr == null) {
         throw "传入的code数组不能为空！"
     }
@@ -17,87 +22,37 @@ function MultiLineParser(arr, isMultiLine) {
         if (arrElement == null || arrElement === "") {
             return "default";
         }
-        if (isMultiLine) {
-            let index = arrElement.indexOf("```");
-            return arrElement.substring(index + 3);
-        }
-        return "default";
+        let index = arrElement.indexOf("```");
+        return index === -1 ? "default" : arrElement.substring(index + 3);
     }
 
     this.getType = function () {
         return this.type;
     };
 
-    /**
-     * 初始化代码块
-     */
-    this.initCode = function () {
-        isMultiLine ? initMultiLineCode.call(this) : initSingleLine.call(this);
+    initMultiLineCode.call(this);
 
-        function initMultiLineCode() {
-            //pre标签可以保留空格
-            this.codeEle = "<pre>";
-            this.codeEle += "<div class='code code-multi-frame''>";
-            this.codeEle += "<ol>";
-            //如果是多行代码去掉第一行和最后一行，因为它们都包含了```
-            for (let i = 1; i < this.codeArr.length - 1; i++) {
-                let singleCodeLine = this.codeArr[i];
+    function initMultiLineCode() {
+        //pre标签可以保留空格
+        this.codeEle = "<pre>";
+        this.codeEle += "<div class='code code-multi-frame''>";
+        this.codeEle += "<ol>";
+        //如果是多行代码去掉第一行和最后一行，因为它们都包含了```
+        for (let i = 1; i < this.codeArr.length - 1; i++) {
+            let singleCodeLine = this.codeArr[i];
 
-                //代码高亮
-                singleCodeLine = highlightCode(singleCodeLine, this.getType());
+            //代码高亮
+            singleCodeLine = highlightCode(singleCodeLine, this.getType());
 
-                // singleCodeLine = escapeCode(singleCodeLine, false);
+            // singleCodeLine = escapeCode(singleCodeLine, false);
 
-                let singleCodeLineEle = "<li class='code-multi-frame-line'>" + singleCodeLine + "</li>";
-                this.codeEle += singleCodeLineEle;
-            }
-            this.codeEle += "</ol>";
-            this.codeEle += "</div>";
-            this.codeEle += "</pre>";
+            let singleCodeLineEle = "<li class='code-multi-frame-line'>" + singleCodeLine + "</li>";
+            this.codeEle += singleCodeLineEle;
         }
-
-        /**
-         * 思路
-         * 遍历一整行，发现`就用html标签替换，再次出现则使用对应的标签闭合
-         */
-        function initSingleLine() {
-            let singleCodeLine = this.codeArr[0];
-            let nstr = "";
-            let codeStart = false;
-            let tempArr = [];
-            //遍历每一个字符
-            for (let i = 0; i < singleCodeLine.length; i++) {
-                let c = singleCodeLine[i];
-                //说明进入了代码块
-                if (codeStart === false && c === "`") {
-                    nstr += "<span class='code code-single-frame'>";
-                    codeStart = true;
-                    tempArr.push(c);
-                    if (escapeCode.escapeTest.test(c)) {
-                        c = escapeCode.replacements[c];
-                    }
-                    continue;
-                }
-                //说明了进入了代码块
-                if (tempArr.length > 0) {
-                    //说明该结束了
-                    if (c === "`") {
-                        codeStart = false;
-                        tempArr = [];
-                        nstr += "</span>";
-                        continue;
-                    }
-                    nstr += c;
-                } else {
-                    //转义
-                    nstr += c;
-                }
-            }
-            this.codeEle = nstr;
-        }
+        this.codeEle += "</ol>";
+        this.codeEle += "</div>";
+        this.codeEle += "</pre>";
     };
-
-    this.initCode();
 
     this.getCodeEle = function () {
         return this.codeEle;
@@ -105,20 +60,22 @@ function MultiLineParser(arr, isMultiLine) {
 }
 
 
+/**
+ * 解析  空格 + Tab 形成的block
+ */
 function BlockParser(arr) {
     this.blockEle = "";
     this.blockEle += "<div class='block-frame' >";
     this.blockEle += "<ol>";
     //不需要第一行的空行
-    for (let i = 1; i < arr.length; i++) {
+    //不处理最后一行
+    for (let i = 1; i < arr.length-1; i++) {
         let line = arr[i];
         //去掉缩进的四个空格，并进行转换
         line = line.substring(4).replace(/ /g, "&nbsp;");
 
-
         //转义特殊字符
         line = escapeCode(line, false);
-
 
         //高亮字符串
         line = line.replace(/&quot;(.*)&quot;/g, "<span style='color: darkgoldenrod'>\"$1\"</span>");
@@ -137,11 +94,18 @@ function BlockParser(arr) {
     }
     this.blockEle += "</ol>";
     this.blockEle += "</div>";
+    let lastLine = arr[arr.length-1];
+    //最后一行不处理
+    this.blockEle += parseLine(lastLine);
+
     this.getBlockEle = function () {
         return this.blockEle;
     }
 }
 
+/***
+ * 解析引用框框
+ */
 function QuoteParser(arr) {
     this.quoteEle = "";
     this.quoteEle += "<div class='quote-frame'>";
