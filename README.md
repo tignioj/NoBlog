@@ -14,6 +14,6 @@ not yet.
 - [x]  escape.
 - [x]  todo list.
 - [ ] change unordered list style
-- [ ] ordered list
+- [x] ordered list
 - [ ] anchor of title
 - [ ] indicator
