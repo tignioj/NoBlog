@@ -10,6 +10,7 @@
 
 window.onload = function () {
     let md = "./posts/1.md";
+    // let md = "./posts/empty.md";
     // let md = "./posts/poem.md";
     // let md = "./posts/blocktest.md";
     // var md = "./posts/2.md";

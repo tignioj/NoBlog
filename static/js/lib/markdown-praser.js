@@ -4,6 +4,7 @@
  */
 function markdownParse(str) {
     // document.write("<h1>hello</h1>")
+    //以换行符作为标准方式分割每一行存到数组中
     let arry = str.split("\n");
     let html = "";
     let singleLine = "";
@@ -15,8 +16,6 @@ function markdownParse(str) {
      * @returns {*}
      */
     function wrapMultiCode(currentIndex, fullArray) {
-
-
         let multiLineArr = [];
         let multiLineBegin = false;
         let i = currentIndex;
@@ -62,23 +61,26 @@ function markdownParse(str) {
         let multiBlockBegin = false;
         let i = currentIndex;
 
-
         /**
-         * 判断是否为结束行
+         * 判断是否为Block的结束行
          * 判断方法：
          *  当前行首四个字符是空格以外的其它字符（也就是没有Tab缩进
          *  但是无法做到一个正则可以判断首行前面四个字符是否有空格以外的字符，因此需要转换思路
          *      1. 利用search方法搜索空格以外的字符[^ ]，搜到的任意一字符如果其位置<4,说明它是结束行
          *      2. 需要注意的是，这个方法搜索到空字符是返-1
          *
-         * @param line
+         * @param line 当前遍历行
+         * @param fullArray 整篇文章的数组
+         * @param currentIndex 当前遍历到的下标
          */
         function isEndingLineOfBlock(line, fullArray, currentIndex) {
-            if (fullArray.length-1 === currentIndex) {
+            //如果判断到当前行已经是文章的最后一行，则认为结束
+            if (fullArray.length - 1 === currentIndex) {
                 return true;
             }
 
             let randomCharButNotEmptyReg = /[^ ]/g;
+            //寻找整行的第一个非空白字符，如果该非空白字符位置<4, 认为不足一个Tab, 则结束之, 除非当前行为空白行
             let charIndex = line.search(randomCharButNotEmptyReg);
             if (charIndex < 4 && line.trim().length !== 0) {
                 // if (charIndex < 4 && line.trim().length !== 0) {
@@ -88,7 +90,7 @@ function markdownParse(str) {
         }
 
         /**
-         * 判断是否为结束行，需要检测多行
+         * 判断是否为Block的开始行，需要检测多行
          * 检测方法：
          *  当前行为空行
          *  下一行不是空行，而且必须有一个Tab（即四个空格在开头）
@@ -97,6 +99,7 @@ function markdownParse(str) {
          * @returns {boolean|boolean}
          */
         function isStartLineOfBlock(fullArray, i) {
+
             //检测是否为空行
             let emptyLineReg = /^\s*$/g;
             /**
@@ -163,7 +166,7 @@ function markdownParse(str) {
                     emptyLineCountOfEnding++;
                 } else {
                     //如果不是结束行，则置空
-                    if (!isEndingLineOfBlock(line,fullArray, i)) {
+                    if (!isEndingLineOfBlock(line, fullArray, i)) {
                         emptyLineCountOfEnding = 0;
                     }
                 }
@@ -249,6 +252,15 @@ function markdownParse(str) {
 }
 
 
+//检测多行空行变成一行
+parseLine.emptyLineCount = 0;
+
+// 有序列表递增用
+// parseLine.orderedListCount = 0;
+// 有序列表递增符号
+parseLine.orderedListCountByLevelMap = new Map();
+
+
 /**
  * 分类解析
  * @param singleLine
@@ -284,37 +296,112 @@ function parseLine(singleLine) {
     }
 
 
-
+    //无序列表
     //\s任意空格加-开头, Tab加-格式化无需列表
-    let liReg = /^\s*\\?-(?!-)/g;
-    if (liReg.test(singleLine)) {
+    // let unOrderedListReg = /^\s*\\?-(?!-)/g;
+    /**
+     * 任意空白开头，前面不能有转义
+     * @type {RegExp}
+     */
+    let unOrderedListReg = /^\s*([-*+])(?!\1)/g;
+    if (unOrderedListReg.test(singleLine)) {
         //判断前面是否有转义符号
-        let liWithEscapeReg = /^\s*(\\-)(?!-)/g;
-        if (liWithEscapeReg.test(singleLine)) {
-            singleLine  = singleLine.replace(liWithEscapeReg, "-");
-        } else {
-            // let styles = ["\t&#8226;",  "\t&#9830;","\t&#9674;"]
-            //字符大区
-            //https://www.cnblogs.com/mengmengi/p/10137167.html
-            //TODO 更换字符
-            //https://www.w3school.com.cn/tiy/t.asp?f=csse_list-style
+        // let styles = ["\t&#8226;",  "\t&#9830;","\t&#9674;"]
+        //字符大区
+        //https://www.cnblogs.com/mengmengi/p/10137167.html
+        //TODO 更换字符
+        //https://www.w3school.com.cn/tiy/t.asp?f=csse_list-style
 
-            // • &bull;
-            // ° &deg;
-            // ♦ &diams;    不推荐, 不同浏览器显示效果不一样
-            // ◊ &loz;
-            //
-            let styles = ["&bull;", "&deg;"];
-            // let styles = ["&bull;", "&deg;", "&diams;", "&loz;"];
-            let spaceLen = singleLine.substring(0, singleLine.indexOf("-")).length;
-            let style = styles[(spaceLen / 4) % styles.length];
-            let retractEle = "<span class='plain-list-indicator' style='padding-left: " + ((spaceLen / 4) * 20) + "px;'>" + style + "</span>";
-            singleLine = "<li class='plain-list'>" + retractEle + singleLine.substring(singleLine.indexOf("-") + 1) + "</li>";
-        }
+        // • &bull;
+        // ° &deg;
+        // ♦ &diams;    不推荐, 不同浏览器显示效果不一样
+        // ◊ &loz;
+        //
+        let styles = ["&bull;", "&deg;"];
+        // let styles = ["&bull;", "&deg;", "&diams;", "&loz;"];
+        // let spaceLen = singleLine.substring(0, singleLine.indexOf("-")).length;
+        //搜索第一个非空白字符
+        let spaceLen = singleLine.search(/[^\s]/g);
+        //获取样式
+        let style = styles[Math.floor(spaceLen / 4) % styles.length];
+        //填充物的宽度
+        let retractEle = "<span class='unordered-list-indicator' style='padding-left: " + ((spaceLen / 4) * 20) + "px;'>" + style + "</span>";
+
+        singleLine = "<li class='unordered-list'>" + retractEle + singleLine.substring(spaceLen + 1) + "</li>";
     }
-    singleLine = singleLine.replace(/\\-/g, "-");
+    singleLine = singleLine.replace(/(\\-|\\\+|\\\*)/g, "$1");
 
     //TODO 有序列表
+    // let orderedListReg = /^\s*\?-(?!-)/g;
+    let orderedListReg = /^\s*(\d+)\./g;
+    if (orderedListReg.test(singleLine)) {
+        // let styles = ["1", "i", "a"];
+        // let styles = ["&bull;", "&deg;", "&diams;", "&loz;"];
+        //搜索第一个 数字.
+        let spaceLen = singleLine.search(/\d+\./g);
+
+        //当前缩进级别
+        let level = Math.floor(spaceLen / 4);
+
+        //拿到当前缩进级别的序号
+        let levelCount = parseLine.orderedListCountByLevelMap.get(level);
+        //如果发现为未定义，则需要从1开始计算
+        if (levelCount === undefined) {
+            levelCount = 1;
+            parseLine.orderedListCountByLevelMap.set(level, levelCount);
+        }
+
+        //获取字符的开头
+        // let charCodeStarter = styles[level % styles.length];
+        //获取递增后的字符
+        // let style = charCodeStarter;
+
+        //显示格式为：
+        // 1.2
+        //      1.2.1
+        //      1.2.2
+        // 需要满足的条件
+        // 获取缩进级别
+        // 获取前面所有缩进级别的号数
+        function getPrefix() {
+            let prefix = "";
+            let m = parseLine.orderedListCountByLevelMap;
+            for (let i = 0; i < level; i++) {
+                let preCount = m.get(i);
+                //因为上一级别的递增了，所以我们要减去1, 如果上一级没有存数，则设置为1
+                preCount = preCount === undefined ? 1 : preCount - 1;
+                prefix += preCount + ".";
+            }
+            return prefix;
+        }
+
+        let style = getPrefix() + levelCount;
+
+        //填充物的宽度
+        let retractEle = "<span class='unordered-list-indicator' style='padding-left: " + ((spaceLen / 4) * 20) + "px;'>" + style + "</span>";
+
+        singleLine = "<li class='unordered-list'>" + retractEle + singleLine.substring(spaceLen + 1) + "</li>";
+
+        //当前level递增
+        parseLine.orderedListCountByLevelMap.set(level, levelCount + 1);
+        //将该级别以下的清空避免污染下一次同级别有序列表
+        //比如
+        // 1. 一级
+        //      1.1 二级
+        //      1.2 二级
+        //      1.3 二级
+        // 2. 一级
+        //      4. 二级   这里被污染
+        for (let i = level + 1; i < parseLine.orderedListCountByLevelMap.size; i++) {
+            parseLine.orderedListCountByLevelMap.set(i, 1);
+        }
+    } else {
+        //如果出现空白行，就清空
+        if (singleLine.trim().length === 0) {
+            parseLine.orderedListCountByLevelMap.clear();
+        }
+    }
+
 
     //图像
     // let teststr = "![abc](http://img.wszjl.com/images/background/jpg/22.jpg)";
@@ -338,7 +425,7 @@ function parseLine(singleLine) {
 
     //链接[]()
     // let lnReg = /(.*)\[(.*)\]\((.*)\)(.*)/g;
-    let lnReg =/\[([^\]]*?)\]\((.*?)\)/g;
+    let lnReg = /\[([^\]]*?)\]\((.*?)\)/g;
     if (lnReg.test(singleLine)) {
         singleLine = singleLine.replace(lnReg, "<a href=\'$2\' >$1</a>");
     }
@@ -404,11 +491,32 @@ function parseLine(singleLine) {
     // if (singleLine.trim().match(regSingleCode) != null) {
     //     singleLine = parseMultiLineArr([singleLine], false);
     // }
-    let regSingleCode = /(^|[^\\])`([^ ])(.*?)([^ ])`/g;
+    // let regSingleCode = /(^|[^\\])`([^ ])(.*?)([^ ])`/g;
+
+    /**
+     * 要求
+     * 1. 不能以转义符号开头
+     * 2. 反引号里面不能以空白开头，不能以空白结尾，中间不得出现反引号
+     *
+     * 写法解释
+     * (^|[^\\])(`[^\s`]+`)|(`([^ ])([^`]*?)([^ ])`)
+     * (^|[^\\]) : 开头可以是非反引号的任意字符
+     *
+     * 组合1: 解决中间出现空白的情况
+     * (^|[^\\])(`[^\s`]+`) : 任意非反引号字符开始, 以`开头，中间不得出现任何空白字符或者反引号字符, 以`结束
+     * 组合2: 解决两边不得出现空白的情况
+     * (^|[^\\])(`([^ ])([^`]*?)([^ ])` :任意非反引号字符开始, 紧跟后面不能出现空白，占位1个，中间不能出现反引号之外的符号，后面一个反引号前面第一个字符不能是空白
+     *
+     * 组合1 | 组合2  = 要求
+     * @type {RegExp}
+     */
+        // let regSingleCode = /(^|[^\\])(`[^\s]`)|(`([^ ])([^`]*?)([^ ])`)/g;
+    let regSingleCode = /(^|[^\\])(`[^\s]`)|(^|[^\\])(`([^ ])([^`]*?)([^ ])`)/g;
     if (singleLine.trim().match(regSingleCode) != null) {
         // singleLine = parseMultiLineArr([singleLine], false);
         // singleLine = singleLine.replace(regSingleCode, "$1<span class='code code-single-frame'>$2$3$4</span>")
         singleLine = singleLine.replace(regSingleCode, function (ch) {
+            //第一个符号被捕获了，需要切割出来, 比如 "test`echo hello`"，其中会拿到 "t`echo hello`, 前面的t就是我们需要单独提取的内容。
             ch = ch.replace(/`(.*)`/g, "$1");
             let firstChar = ch.substring(0, 1);
             ch = ch.substring(1);
@@ -422,13 +530,12 @@ function parseLine(singleLine) {
     singleLine = singleLine.replace(/\\`/g, "`");
 
 
-
     //转义\\成为\
     singleLine = singleLine.replace(/\\\\/g, "\\");
 
     // 检测多行空行变成一行
-    if (singleLine.trim().length === 0&&emptyLineCount <= 1) {
-        emptyLineCount++;
+    if (singleLine.trim().length === 0 && parseLine.emptyLineCount <= 1) {
+        parseLine.emptyLineCount++;
         return "<br/>"
     }
 
@@ -439,13 +546,10 @@ function parseLine(singleLine) {
     let plainTextReg = /^\s*</g;
     let temLine = singleLine.trim();
     if (temLine.length > 0 && !plainTextReg.test(temLine)) {
-        emptyLineCount = 0;
+        parseLine.emptyLineCount = 0;
         // singleLine = "<p class='plain-text'>" + singleLine + "</p>";
         singleLine = "<span class='plain-text'>" + singleLine + "</span>";
     }
 
     return singleLine;
 }
-//检测多行空行变成一行
-let emptyLineCount = 0;
-
