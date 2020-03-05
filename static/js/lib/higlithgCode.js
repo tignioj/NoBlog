@@ -529,24 +529,6 @@ function highlightCode(rawCode, language) {
         return indentEle + nCode;
 
 
-        // function parseDefaultAfterSplitByCommentOf(nCode) {
-        //     // 高亮关键字
-        //     nCode = hlKeyWords(nCode);
-        //
-        //     //
-        //     // 高亮字符串
-        //     nCode = hlString(nCode);
-        //     //
-        //     // 高亮数字
-        //     nCode = highlightNumber(nCode);
-        //     //
-        //     //高亮函数
-        //     nCode = hlFunction(nCode);
-        //
-        //     // return "<span style='color: " + getRanDomColor() + ";'>" + rawCode + "</span>";
-        //     return nCode;
-        // }
-
         /***
          * 处理被正则分割后，非全注释部分
          * 比如

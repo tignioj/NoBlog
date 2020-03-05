@@ -35,7 +35,11 @@ function MultiLineParser(arr) {
     function initMultiLineCode() {
         //pre标签可以保留空格
         this.codeEle = "<pre>";
-        this.codeEle += "<div class='code code-multi-frame''>";
+        // this.codeEle += "<div class='code code-multi-frame'>";
+        this.codeEle += "<div class='code code-multi-frame'>";
+        this.codeEle += "<div class='md-code-bar'  >" +
+            "<span onclick='toggleCode(this, this.parentElement.nextSibling)'  class='md-code-fold'>+</span>" +
+            "</div>";
         this.codeEle += "<ol>";
         //如果是多行代码去掉第一行和最后一行，因为它们都包含了```
         for (let i = 1; i < this.codeArr.length - 1; i++) {
@@ -43,8 +47,6 @@ function MultiLineParser(arr) {
 
             //代码高亮
             singleCodeLine = highlightCode(singleCodeLine, this.getType());
-
-            // singleCodeLine = escapeCode(singleCodeLine, false);
 
             let singleCodeLineEle = "<li class='code-multi-frame-line'>" + singleCodeLine + "</li>";
             this.codeEle += singleCodeLineEle;
@@ -69,7 +71,7 @@ function BlockParser(arr) {
     this.blockEle += "<ol>";
     //不需要第一行的空行
     //不处理最后一行
-    for (let i = 1; i < arr.length-1; i++) {
+    for (let i = 1; i < arr.length - 1; i++) {
         let line = arr[i];
         //去掉缩进的四个空格，并进行转换
         line = line.substring(4).replace(/ /g, "&nbsp;");
@@ -94,7 +96,7 @@ function BlockParser(arr) {
     }
     this.blockEle += "</ol>";
     this.blockEle += "</div>";
-    let lastLine = arr[arr.length-1];
+    let lastLine = arr[arr.length - 1];
     //最后一行不处理
     this.blockEle += parseLine(lastLine);
 

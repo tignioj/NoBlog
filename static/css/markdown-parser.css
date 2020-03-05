@@ -16,11 +16,11 @@
     padding: 20px;
     list-style-type: none;
 }
+
 /*缩进框下的*/
 .block-frame li {
     font-family: monospace;
 }
-
 
 
 /*引用框*/
@@ -56,12 +56,12 @@
     margin: 10px 0 0 0;
     padding: 0;
 }
+
 .ordered-list {
     list-style: none;
     margin: 10px 0 0 0;
     padding: 0;
 }
-
 
 
 /*所有的标题*/
@@ -74,8 +74,6 @@
     line-height: 2;
     margin: 15px 0 0 0;
 }
-
-
 
 
 /*删除*/
@@ -109,4 +107,37 @@
 /*完成清单*/
 .md-todo-checked {
 
+}
+
+
+/*代码框上面的横条*/
+.md-code-bar {
+    /*border-radius: 0.5em;*/
+    /*background-color: black;*/
+    /*border-bottom: 1px solid rgba(0, 0, 0, 0.57);*/
+    position: relative;
+    height: 25px;
+}
+
+/*折叠代码的按钮*/
+.md-code-fold {
+    cursor: pointer;
+    right: 6px;
+    line-height: 0;
+    top: 12px;
+    border-radius: 100%;
+    border: 0;
+    position: absolute;
+    background-color: transparent;
+    /*background-color: darkslategray;*/
+    font-weight: bolder;
+    /*color: #bababa;*/
+    color: darkgray;
+    font-size: xx-large;
+    user-select: none;
+}
+
+.md-code-fold:hover {
+    transition-duration: 100ms;
+    /*background-color: darkgoldenrod;*/
 }

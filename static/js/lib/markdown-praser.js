@@ -529,3 +529,18 @@ function toggle(element) {
     let display = element.style.display;
     element.style.display = display === ("" || "none") ? "block" : "none";
 }
+
+/*代码折叠*/
+function toggleCode(button, element) {
+    button.style.transform = "-webkit-transform 500ms ease-in-out";
+    if (button.innerText === "+") {
+        button.innerText = "-";
+        button.style.transform = "rotate(180deg)";
+    } else {
+        button.innerText = "+";
+        button.style.transform = "rotate(0deg)";
+    }
+    let display = element.style.display;
+    element.style.display = display === ("" || "none") ? "block" : "none";
+}
+
