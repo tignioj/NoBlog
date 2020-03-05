@@ -109,25 +109,68 @@
 
 }
 
+#indicator {
+    visibility: hidden;
+    border-left: 1px solid rgba(128, 128, 128, 0.56);
+    border-bottom: 1px solid rgba(128, 128, 128, 0.56);
+    position: fixed;
+    top: 0;
+    right: 0;
+    padding: 10px;
+    max-width: 30%;
+    max-height: 100%;
+    overflow: auto;
+}
+
+#indicator > div {
+}
+
+#indicator {
+    visibility: hidden;
+    border-left: 1px solid rgba(128, 128, 128, 0.56);
+    border-bottom: 1px solid rgba(128, 128, 128, 0.56);
+    position: fixed;
+    top: 0;
+    right: 0;
+    padding: 10px;
+    max-width: 30%;
+    max-height: 100%;
+    overflow: auto;
+}
+
+
+.md-indicator-line {
+    cursor: pointer;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.56);
+    margin: 0;
+    padding: 10px 10px 2px 10px;
+}
+
 
 /*代码框上面的横条*/
-.md-code-bar {
+.md-indicator-bar {
     /*border-radius: 0.5em;*/
     /*background-color: black;*/
     /*border-bottom: 1px solid rgba(0, 0, 0, 0.57);*/
-    position: relative;
+    /*position: relative;*/
     height: 25px;
 }
 
-/*折叠代码的按钮*/
-.md-code-fold {
+/*折叠目录的按钮*/
+.md-indicator-btn {
     cursor: pointer;
-    right: 6px;
-    line-height: 0;
-    top: 12px;
+    padding: 10px;
+    width: 25px;
+    height: 25px;
+    text-align: center;
+    /*display: inline-block;*/
+    right: 10px;
+    line-height: 25px;
+    top: 10px;
     border-radius: 100%;
-    border: 0;
-    position: absolute;
+    /*border: 1px solid red;*/
+    /*border: 0;*/
+    position: fixed;
     background-color: transparent;
     /*background-color: darkslategray;*/
     font-weight: bolder;
@@ -137,7 +180,7 @@
     user-select: none;
 }
 
-.md-code-fold:hover {
+.md-indicator-btn:hover {
     transition-duration: 100ms;
     /*background-color: darkgoldenrod;*/
 }

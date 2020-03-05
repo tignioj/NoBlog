@@ -33,7 +33,7 @@ function ajaxLoadError() {
  * @returns {string}
  */
 function loadFileString(url, callback) {
-    var xhr = getXMLHttp();
+    let xhr = getXMLHttp();
     xhr.open("GET", url);
     xhr.send();
     xhr.onreadystatechange = function () {
@@ -44,7 +44,7 @@ function loadFileString(url, callback) {
 }
 
 function getXMLHttp() {
-    var xmlhttp;
+    let xmlhttp;
     xmlhttp = null;
     if (window.XMLHttpRequest) {// code for all new browsers
         xmlhttp = new XMLHttpRequest();

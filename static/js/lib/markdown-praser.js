@@ -153,10 +153,10 @@ function markdownParse(str) {
         if (isQuoteStart()) {
             return wrapMulti(
                 currentIndex,
-                function (currentIndex, currentLine)  {
+                function (currentIndex, currentLine) {
                     return /^\s{0,}$/g.test(currentLine);
                 },
-                function(arr)  {
+                function (arr) {
                     return parseQuote(arr);
                 }
             );
@@ -217,7 +217,7 @@ function markdownParse(str) {
 
 //解析完成，返回MarkedHtml对象
 // markedHtml.indicator = indicator;
-    return new MarkedHtml(html);
+    return html;
 }
 
 

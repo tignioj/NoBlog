@@ -5,15 +5,51 @@ body {
 }
 
 /*markdonw解析后显示的地方*/
-#content {
-    padding: 10px;
+#app {
     /*background-color: ghostwhite;*/
     /*border: 1px solid red;*/
 
     /*居中技巧*/
     max-width: 10000px;
-    /*width: 70%;*/
     margin: auto;
+}
+#content {
+    padding: 10px;
+    float: left;
+}
+
+
+
+/*代码框上面的横条*/
+.md-code-bar {
+    /*border-radius: 0.5em;*/
+    /*background-color: black;*/
+    /*border-bottom: 1px solid rgba(0, 0, 0, 0.57);*/
+    position: relative;
+    height: 25px;
+}
+
+/*折叠代码的按钮*/
+.md-code-fold {
+    cursor: pointer;
+    right: 6px;
+    line-height: 0;
+    top: 12px;
+    border-radius: 100%;
+    border: 0;
+    position: absolute;
+    background-color: transparent;
+    /*background-color: darkslategray;*/
+    font-weight: bolder;
+    /*color: #bababa;*/
+    color: darkgray;
+    font-size: xx-large;
+    user-select: none;
+}
+
+.md-code-fold:hover {
+    transition-duration: 100ms;
+    /*background-color: darkgoldenrod;*/
 }
 
 
@@ -26,8 +62,9 @@ body {
         /*background-color: #fa6125;*/
         /*border: 1px solid red;*/
         /*border-radius: 0.5em;*/
-
-
+    }
+    #indicator{
+        max-width: 30%;
     }
 }
 
@@ -51,6 +88,13 @@ body {
     /*    width: 100%;*/
     /*}*/
     #content {
-        width: 90%;
+        width: 100%;
+    }
+    #indicator {
+        background-color: rgba(0, 0, 0, 0.83);
+        color: #ffffff;
+        /*display: none;*/
+        width: 100%;
+        max-width: 100%;
     }
 }
