@@ -109,23 +109,13 @@
 
 }
 
-#indicator {
-    visibility: hidden;
-    border-left: 1px solid rgba(128, 128, 128, 0.56);
-    border-bottom: 1px solid rgba(128, 128, 128, 0.56);
-    position: fixed;
-    top: 0;
-    right: 0;
-    padding: 10px;
-    max-width: 30%;
-    max-height: 100%;
-    overflow: auto;
-}
+
 
 #indicator > div {
 }
 
 #indicator {
+    /*初次加载时候不显示目录，用js检测是否有目录，如果有由js设置为visible*/
     visibility: hidden;
     border-left: 1px solid rgba(128, 128, 128, 0.56);
     border-bottom: 1px solid rgba(128, 128, 128, 0.56);

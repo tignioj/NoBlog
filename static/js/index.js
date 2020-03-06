@@ -99,12 +99,16 @@ function loadIndicator() {
         }
 
         let aEle = document.createElement("p");
-        aEle.style.cssText = "margin-left:" + (level * 20) + "px;";
+        // aEle.style.cssText = "margin-left:" + (level * 20) + "px;";
+        let spaces = "";
+        for (let j = 0; j < level; j++) {
+            spaces += "&nbsp;&nbsp;";
+        }
         aEle.classList.add("md-indicator-line");
         aEle.addEventListener('click', function () {
             jumpTo(header);
         });
-        aEle.innerText = style + header.innerText;
+        aEle.innerHTML = spaces + style + header.innerText;
         indicatorWraperEle.appendChild(aEle);
         // let br = document.createElement("br");
         // indicatorWraperEle.appendChild(br);
@@ -113,20 +117,38 @@ function loadIndicator() {
 }
 
 function jumpTo(element) {
-    // var scrollvalue = document.getElementById("custom").offsetTop;
-    //TODO 不兼容IE
-    let scrollvalue = element.offsetTop;
-    window.scrollTo({
-        top: scrollvalue,
-        behavior: "smooth"
-    });
+    // element.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+    element.scrollIntoView();
 }
 
+/**
+ * 检测是否为IE
+ * @returns {boolean}
+ */
+function isIE() { //ie?
+    if (!!window.ActiveXObject || "ActiveXObject" in window)
+        return true;
+    else
+        return false;
+}
 //TODO 手机刚进入时默认目录隐藏
 
 /*目录折叠*/
 function toggleCatalog(button) {
     let indicator = document.getElementById("indicator");
+
+
+    //当PC为""或"none"时成立
+    //ele.style.XX 此方法获取的是内联样式表，因此初次获取时手机和电脑端都为"", 所以应该要获取外联样式表window.getComputedStyle(element,pseudoElement).XXX
+    // let display = indicator.style.display;
+    let display = window.getComputedStyle(indicator, null).display;
+    if (display === "none") {
+        indicator.style.display = "block";
+    } else {
+        indicator.style.display = "none";
+    }
+    // indicator.style.display = (display === ("" || "none")) ? "block" : "none";
+
     button.style.transform = "-webkit-transform 500ms ease-in-out";
     if (button.innerText === "+") {
         button.innerText = "-";
@@ -136,7 +158,5 @@ function toggleCatalog(button) {
         button.style.transform = "rotate(0deg)";
         button.style.transform = "translateX(0)";
     }
-    let display = indicator.style.display;
-    indicator.style.display = display === ("" || "none") ? "block" : "none";
 }
 

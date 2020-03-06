@@ -53,8 +53,6 @@ body {
 }
 
 
-
-
 /*!*当屏幕段都大于1024执行的css*!*/
 @media only screen and (min-width: 1024px) {
     /*markdown区域*/
@@ -93,7 +91,7 @@ body {
     #indicator {
         background-color: rgba(0, 0, 0, 0.83);
         color: #ffffff;
-        /*display: none;*/
+        display: none;
         width: 100%;
         max-width: 100%;
     }
