@@ -1,3 +1,8 @@
+//TODO
+// 1. 指示器指向当前浏览的位置
+// 2. 目录只显示H1, 其余的当浏览到该位置时再显示
+
+
 /**
  * Markdown 解析器
  * 支持列表如下
@@ -27,15 +32,33 @@ function loadDoc(str) {
 
 
 /**
- * 存储每个级别递增到的序号
- * @type {Map<any, any>}
+ * 存储每个级别递增到的序号, 比如
+ * level1 目前是1
+ * level2 目前是3
+ * 那么存储的结构就是
+ * {
+ *     1: 1,
+ *     2, 3
+ * }
+ * @type {Map<string, int>}
  */
 loadIndicator.levelMap = new Map();
 
+/**
+ * 加载目录
+ */
 function loadIndicator() {
+
+    /**
+     * 获取标题前缀，比如 1., 1.1, 1.1.1, 2.1, 2.1.1等
+     * @param level 当前缩进级别, 根据4个空格为一个缩进判断
+     * @returns {string}
+     */
     function getPrefix(level) {
         let prefix = "";
+
         let m = loadIndicator.levelMap;
+
         for (let i = 1; i < level; i++) {
             let preCount = m.get(i);
             //因为上一级别的递增了，所以我们要减去1, 如果上一级没有存数，则设置为1
@@ -47,13 +70,17 @@ function loadIndicator() {
 
     let indicator = document.getElementById("indicator");
 
+    //创建一个目录div
     let indicatorWraperEle = document.createElement("div");
 
+    //创建一个目录导航条div
     let catalogEle = document.createElement("div");
     catalogEle.classList.add("md-indicator-bar");
+    //给导航条添加toggle按钮，用于显示/隐藏目录
     let toggleBtn = document.createElement("span");
     toggleBtn.classList.add("md-indicator-btn");
     toggleBtn.innerText = "+";
+    //点击按钮时，调用方法隐藏/显示按钮
     toggleBtn.addEventListener('click', function () {
         toggleCatalog(this, this.parentElement.nextSibling);
     });
@@ -65,6 +92,7 @@ function loadIndicator() {
     // indicator.appendChild(catalogEle);
     document.getElementById("app").appendChild(catalogEle);
 
+    //如果么有任何一个header标签，就隐藏目录
     if (headers.length === 0) {
         indicator.style.visibility = "visibility: hidden";
         return;
@@ -72,6 +100,7 @@ function loadIndicator() {
         indicator.style.cssText += "visibility: visible;";
     }
 
+    //遍历每一个标题，存到目录div里面
     for (let i = 0; i < headers.length; i++) {
         let header = headers[i];
         let headerName = header.tagName;
@@ -121,17 +150,7 @@ function jumpTo(element) {
     element.scrollIntoView();
 }
 
-/**
- * 检测是否为IE
- * @returns {boolean}
- */
-function isIE() { //ie?
-    if (!!window.ActiveXObject || "ActiveXObject" in window)
-        return true;
-    else
-        return false;
-}
-//TODO 手机刚进入时默认目录隐藏
+
 
 /*目录折叠*/
 function toggleCatalog(button) {

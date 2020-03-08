@@ -272,6 +272,7 @@ function parseLine(singleLine) {
      * 任意空白开头，前面不能有转义
      * @type {RegExp}
      */
+    // let unOrderedListReg = /^\s*([-*+])(?!\1)/g;
     let unOrderedListReg = /^\s*([-*+])(?!\1)/g;
     if (unOrderedListReg.test(singleLine)) {
         //判断前面是否有转义符号
@@ -298,7 +299,8 @@ function parseLine(singleLine) {
 
         singleLine = "<p class='unordered-list'>" + retractEle + singleLine.substring(spaceLen + 1) + "</p>";
     }
-    singleLine = singleLine.replace(/(\\-|\\\+|\\\*)/g, "$1");
+    // singleLine = singleLine.replace(/(\\\-|\\\+|\\\*)/g, "$1");
+    singleLine = singleLine.replace(/\\(\-|\+|\*)/g, "$1");
 
     //TODO 有序列表
     // let orderedListReg = /^\s*\?-(?!-)/g;
@@ -521,7 +523,6 @@ function parseLine(singleLine) {
         // singleLine = "<p class='plain-text'>" + singleLine + "</p>";
         singleLine = "<span class='plain-text'>" + singleLine + "</span>";
     }
-
     return singleLine;
 }
 

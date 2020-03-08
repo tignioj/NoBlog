@@ -99,21 +99,18 @@
     text-decoration: underline;
 }
 
-/*未完成清单*/
+/*未完成清单的*/
 .md-todo-uncheck {
-
 }
 
 /*完成清单*/
 .md-todo-checked {
-
 }
-
-
 
 #indicator > div {
 }
 
+/*目录的div*/
 #indicator {
     /*初次加载时候不显示目录，用js检测是否有目录，如果有由js设置为visible*/
     visibility: hidden;
@@ -128,7 +125,7 @@
     overflow: auto;
 }
 
-
+/*目录的每一行*/
 .md-indicator-line {
     cursor: pointer;
     border-bottom: 1px solid rgba(128, 128, 128, 0.56);
@@ -136,6 +133,10 @@
     padding: 10px 10px 2px 10px;
 }
 
+/* 目录中高亮当前位置 */
+.md-indicator-line-active {
+    background-color: red;
+}
 
 /*代码框上面的横条*/
 .md-indicator-bar {
@@ -174,3 +175,4 @@
     transition-duration: 100ms;
     /*background-color: darkgoldenrod;*/
 }
+

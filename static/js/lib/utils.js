@@ -43,6 +43,10 @@ function loadFileString(url, callback) {
     }
 }
 
+/**
+ * 获取异步请求对象
+ * @returns {XMLHttpRequest}
+ */
 function getXMLHttp() {
     let xmlhttp;
     xmlhttp = null;
@@ -58,3 +62,14 @@ function getXMLHttp() {
     }
 }
 
+
+/**
+ * 检测是否为IE
+ * @returns {boolean}
+ */
+function isIE() { //ie?
+    if (!!window.ActiveXObject || "ActiveXObject" in window)
+        return true;
+    else
+        return false;
+}
