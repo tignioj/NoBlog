@@ -32,7 +32,6 @@ function markdownParse(str) {
     /**
      * 一个解析多行代码的接口
      * @param currentIndex 当前解析到的行数
-     * @param fullArray 整个文章按照行数切割形成的数组
      * @param isMultiEndDetectFunction 判断结束的方法，要求外界调用者传入
      * @param parseFunction 调用哪个解析的方法
      */
@@ -86,7 +85,8 @@ function markdownParse(str) {
 
         }
         return afterParsedIndex;
-    };
+    }
+
 
     /**
      * 封装多行block
@@ -234,8 +234,32 @@ parseLine.emptyLineCount = 0;
 parseLine.orderedListCountByLevelMap = new Map();
 
 
+//多行解析路由============================开始
 /**
- * 分类解析
+ * 解析Mardown代码块
+ * 注意：防止xml被解析！需要转义 > <
+ */
+function parseMultiLineArr(arr) {
+    let codeParse = new CodeParser(arr);
+    return codeParse.getCodeEle();
+}
+
+function parseBlock(arr) {
+    let blockParser = new BlockParser(arr);
+    return blockParser.getBlockEle();
+}
+
+function parseQuote(arr) {
+
+    let quoteParse = new QuoteParser(arr);
+    return quoteParse.getQuoteEle();
+}
+//多行解析路由============================结束
+
+
+//单行解析============================开始
+/**
+ * 分类单行代码
  * @param singleLine
  * @returns {string|*}
  */
@@ -247,9 +271,20 @@ function parseLine(singleLine) {
     // if (index !== -1) {
     //     singleLine = parseHeader(singleLine);
     // }
+    // let headerReg = /^\s*#/g;
+    // if (headerReg.test(singleLine)) {
+    //     singleLine = parseHeader(singleLine);
+    // }
+
+    //标题#
     let headerReg = /^\s*#/g;
     if (headerReg.test(singleLine)) {
-        singleLine = parseHeader(singleLine);
+        let sharpLen = /^\s*(#*)/g.exec(singleLine)[1].length;
+        if (sharpLen >= 7) {
+            sharpLen = 6;
+        }
+        // let sstr = "<h" + sharpLen + " class='header header-" + sharpLen+ "'>" + singleLine.replace(/^\s*#*(.*)/g, "$1") + "</h" + sharpLen+ ">";
+        singleLine = "<h" + sharpLen + " class='header header-" + sharpLen+ "'>" + singleLine.trim().substring(sharpLen) + "</h" + sharpLen+ ">";
     }
     //转义
     singleLine = singleLine.replace(/\\#/g, "#");
@@ -529,6 +564,9 @@ function parseLine(singleLine) {
     }
     return singleLine;
 }
+//单行解析============================结束
+
+
 
 function toggle(element) {
     let display = element.style.display;
@@ -548,4 +586,5 @@ function toggleCode(button, element) {
     let display = element.style.display;
     element.style.display = display === ("" || "none") ? "block" : "none";
 }
+
 

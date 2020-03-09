@@ -22,7 +22,10 @@ window.onload = function () {
     // var md = "./posts/3.md";
     // var md = "./posts/post.md";
     loadFileString(md, loadDoc);
+
+
 };
+
 
 function loadDoc(str) {
     let markedHtml = markdownParse(str);
@@ -193,8 +196,6 @@ window.onscroll = function () {
         document.getElementById("back-to-top-btn").style.bottom = "-90px";
     }
 
-    // let percent = getReadingProcess();
-    // document.getElementById("back-to-top-btn").style.backgroundSize = "100% " + percent * 100 + "%";
     /**
      * 思路：
      * 1. 获取window总高度 body.scrollHeight
@@ -211,14 +212,6 @@ window.onscroll = function () {
     // console.log(pE.innerText + "-->" + currentElement.innerText);
     currentElement.style.backgroundColor = "darkgrey";
 };
-
-/**
- * 获取阅读进度百分比，范围0-1
- * @returns {number}
- */
-function getReadingProcess() {
-    return getScrollTop() / (getScrollHeight() - getClientHeight());
-}
 
 
 function jumpTo(element) {

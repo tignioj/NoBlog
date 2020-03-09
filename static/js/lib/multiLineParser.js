@@ -3,7 +3,7 @@
  * @param arr
  * @constructor
  */
-function MultiLineParser(arr) {
+function CodeParser(arr) {
     if (arr == null) {
         throw "传入的code数组不能为空！"
     }
@@ -26,13 +26,7 @@ function MultiLineParser(arr) {
         return index === -1 ? "default" : arrElement.substring(index + 3);
     }
 
-    this.getType = function () {
-        return this.type;
-    };
-
-    initMultiLineCode.call(this);
-
-    function initMultiLineCode() {
+    this.initMultiLineCode = function () {
         //pre标签可以保留空格
         this.codeEle = "<pre>";
         // this.codeEle += "<div class='code code-multi-frame'>";
@@ -46,7 +40,7 @@ function MultiLineParser(arr) {
             let singleCodeLine = this.codeArr[i];
 
             //代码高亮
-            singleCodeLine = highlightCode(singleCodeLine, this.getType());
+            singleCodeLine = highlightCode(singleCodeLine, this.type);
 
             let singleCodeLineEle = "<li class='code-multi-frame-line'>" + singleCodeLine + "</li>";
             this.codeEle += singleCodeLineEle;
@@ -55,6 +49,8 @@ function MultiLineParser(arr) {
         this.codeEle += "</div>";
         this.codeEle += "</pre>";
     };
+
+    this.initMultiLineCode();
 
     this.getCodeEle = function () {
         return this.codeEle;
@@ -106,7 +102,7 @@ function BlockParser(arr) {
 }
 
 /***
- * 解析引用框框
+ * 解析引用框框 >
  */
 function QuoteParser(arr) {
     this.quoteEle = "";
