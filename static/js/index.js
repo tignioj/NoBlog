@@ -44,11 +44,11 @@ function loadDoc(str) {
  */
 loadIndicator.levelMap = new Map();
 
+
 /**
  * 加载目录
  */
 function loadIndicator() {
-
     /**
      * 获取标题前缀，比如 1., 1.1, 1.1.1, 2.1, 2.1.1等
      * @param level 当前缩进级别, 根据4个空格为一个缩进判断
@@ -138,18 +138,93 @@ function loadIndicator() {
             jumpTo(header);
         });
         aEle.innerHTML = spaces + style + header.innerText;
+
+
         indicatorWraperEle.appendChild(aEle);
         // let br = document.createElement("br");
         // indicatorWraperEle.appendChild(br);
     }
     indicator.appendChild(indicatorWraperEle);
+
+
 }
+
+/**
+ * 存放每个header的高度
+ * 用途: 页面滚动时查询该高度的元素
+ * @type {Map<number, Node>}
+ */
+document.getElementById("back-to-top-btn").addEventListener("click", function () {
+    scrolltotop();
+});
+
+
+/**
+ * 获取当前可见区域内，距离屏幕顶部最近的元素
+ * @param currentPageYOffset
+ */
+function getCurrentScrollElement(currentPageYOffset) {
+    let headers = document.getElementsByClassName("header");
+    let currentIndex = 0;
+    for (let i = currentIndex; i < headers.length; i++) {
+        let currentHeader = headers[currentIndex];
+        let eleOffsetTop = currentHeader.offsetTop;
+        if (currentPageYOffset + headers[0].offsetTop >= eleOffsetTop) {
+            currentIndex++;
+        }
+    }
+    getCurrentScrollElement.preElement = document.getElementsByClassName("md-indicator-line")[currentIndex-1];
+    let headersInIndicator = document.getElementsByClassName("md-indicator-line");
+    return headersInIndicator[currentIndex-1];
+}
+
+/**
+ * 上一个获取到的元素
+ * @type {Element}
+ */
+getCurrentScrollElement.preElement = document.getElementsByClassName("md-indicator-line")[0];
+
+
+window.onscroll = function () {
+    //当处于顶部时，隐藏“回到顶部”按钮
+    if (window.pageYOffset > 50) {
+        document.getElementById("back-to-top-btn").style.bottom = "20px";
+    } else {
+        document.getElementById("back-to-top-btn").style.bottom = "-90px";
+    }
+
+    let percent = getReadingProcess();
+    document.getElementById("back-to-top-btn").style.backgroundSize = "100% " + percent * 100 + "%";
+    /**
+     * 思路：
+     * 1. 获取window总高度 body.scrollHeight
+     * 2. 获取网页滚动到的高度 body.pageYOffset
+     * 3. 获取第一个元素滚动到的高度
+     *  如何获取？
+     *      再某个范围内
+     * 4. 如果第一个超出了
+     *
+     */
+    let pE = getCurrentScrollElement.preElement === undefined ? document.getElementsByClassName("md-indicator-line")[0] : getCurrentScrollElement.preElement;
+    pE.style.backgroundColor = "transparent";
+    let currentElement = getCurrentScrollElement(window.pageYOffset);
+    // console.log(pE.innerText + "-->" + currentElement.innerText);
+    currentElement.style.backgroundColor = "darkgrey";
+};
+
+/**
+ * 获取阅读进度百分比，范围0-1
+ * @returns {number}
+ */
+function getReadingProcess() {
+    return getScrollTop() / (getScrollHeight() - getClientHeight());
+}
+
 
 function jumpTo(element) {
     // element.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
     element.scrollIntoView();
 }
-
 
 
 /*目录折叠*/

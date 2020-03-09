@@ -73,3 +73,48 @@ function isIE() { //ie?
     else
         return false;
 }
+
+
+/**
+ * 网页当前滚动的高度
+ * @returns {number}
+ */
+function getScrollTop() {
+    let scrollTop = 0;
+    if (document.documentElement && document.documentElement.scrollTop) {
+        scrollTop = document.documentElement.scrollTop;
+    } else if (document.body) {
+        scrollTop = document.body.scrollTop;
+    }
+    return scrollTop;
+}
+
+/**
+ * 网页可见高度
+ * @returns {number}
+ */
+function getClientHeight() {
+    return document.documentElement.clientHeight;
+}
+
+//网页正文全文高： document.body.scrollHeight;
+function getScrollHeight() {
+    return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+}
+
+//回到顶部
+function scrolltotop() {
+    // let currentScroll = document.documentElement.scrollTop || document.body.scrollTop;
+    let currentScroll = window.pageYOffset;
+    if (currentScroll > 0) {
+        window.requestAnimationFrame(scrolltotop);
+        let intervalHeight = currentScroll - currentScroll / 2;
+
+        /*在IE中可能会计算不到intervalHeight == 0的情况, 我们需要手动置为0*/
+        if (intervalHeight <= 5) {
+            intervalHeight = 0;
+        }
+        window.scrollTo(0, intervalHeight);
+    }
+}
+
