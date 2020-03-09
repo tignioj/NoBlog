@@ -60,6 +60,8 @@ function markdownParse(str) {
 
 
             //判断是否为空行
+            //如果是空行，说明是冗余行, 冗余行计数器自增；如果当前行是结束行且为空行，则不需要自增
+            // if (currentBlockLine.trim().length === 0 && !isEndLine) {
             if (currentBlockLine.trim().length === 0) {
                 emptyLineCountOfEnding++;
             } else {
@@ -80,8 +82,6 @@ function markdownParse(str) {
                 break;
             }
 
-
-            /*结束行也存入*/
             preArr.push(currentBlockLine);
 
         }
@@ -107,7 +107,7 @@ function markdownParse(str) {
         }
 
         if (isStartLineOfBlock()) {
-            return wrapMulti(
+            let afterIndex = wrapMulti(
                 currentIndex,
                 function (currentIndex, currentLine, fullArray) {
                     /** 判断是否为Block的结束行
@@ -139,7 +139,11 @@ function markdownParse(str) {
                 function (arr) {
                     return parseBlock(arr)
                 }
-            )
+            );
+
+            /*不处理最后一行*/
+            return afterIndex - 1;
+
         }
         return currentIndex;
     }
@@ -272,7 +276,7 @@ function parseLine(singleLine) {
      * 任意空白开头，前面不能有转义
      * @type {RegExp}
      */
-    // let unOrderedListReg = /^\s*([-*+])(?!\1)/g;
+        // let unOrderedListReg = /^\s*([-*+])(?!\1)/g;
     let unOrderedListReg = /^\s*([-*+])(?!\1)/g;
     if (unOrderedListReg.test(singleLine)) {
         //判断前面是否有转义符号

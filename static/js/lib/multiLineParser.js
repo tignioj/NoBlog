@@ -69,8 +69,8 @@ function BlockParser(arr) {
     this.blockEle = "";
     this.blockEle += "<div class='block-frame' >";
     this.blockEle += "<ol>";
-    //不需要第一行的空行
-    //不处理最后一行
+    //不需要第一行的空行 所以let i = 1;
+    //不处理最后一行, 所以arr.length-1
     for (let i = 1; i < arr.length - 1; i++) {
         let line = arr[i];
         //去掉缩进的四个空格，并进行转换
@@ -96,9 +96,9 @@ function BlockParser(arr) {
     }
     this.blockEle += "</ol>";
     this.blockEle += "</div>";
-    let lastLine = arr[arr.length - 1];
+    // let lastLine = arr[arr.length - 1];
     //最后一行不处理
-    this.blockEle += parseLine(lastLine);
+    // this.blockEle += parseLine(lastLine);
 
     this.getBlockEle = function () {
         return this.blockEle;
