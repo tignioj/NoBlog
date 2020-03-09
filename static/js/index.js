@@ -131,7 +131,7 @@ function loadIndicator() {
         // aEle.style.cssText = "margin-left:" + (level * 20) + "px;";
         let spaces = "";
         for (let j = 0; j < level; j++) {
-            spaces += "&nbsp;&nbsp;";
+            spaces += "&nbsp;&nbsp;&nbsp;&nbsp;";
         }
         aEle.classList.add("md-indicator-line");
         aEle.addEventListener('click', function () {
@@ -193,8 +193,8 @@ window.onscroll = function () {
         document.getElementById("back-to-top-btn").style.bottom = "-90px";
     }
 
-    let percent = getReadingProcess();
-    document.getElementById("back-to-top-btn").style.backgroundSize = "100% " + percent * 100 + "%";
+    // let percent = getReadingProcess();
+    // document.getElementById("back-to-top-btn").style.backgroundSize = "100% " + percent * 100 + "%";
     /**
      * 思路：
      * 1. 获取window总高度 body.scrollHeight

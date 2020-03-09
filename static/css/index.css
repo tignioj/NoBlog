@@ -57,23 +57,18 @@ body {
     position: fixed;
     bottom: -90px;
     right: 20px;
-    background-image: url("../../static/images/icon/circle.png");
-    /*background-position: center;*/
-    background-size: 0 0;
-    background-position: bottom;
-    /*border: 1px solid red;*/
-    background-repeat: no-repeat;
-    border-radius: 50%;
     width: 40px;
     height: 40px;
 }
 /*回到顶部下的图标*/
 #back-to-top-btn img{
+    /*居中技巧--开始*/
     top: 50%;
     position: relative;
     display: block;
     margin: 0 auto;
     transform: translateY(-50%);
+    /*居中技巧--结束*/
     /*filter: drop-shadow(1px 0px 0rem rgb(0,0,0));*/
 }
 
