@@ -130,7 +130,7 @@ function loadIndicator() {
         loadIndicator.levelMap.set(level, levelCount + 1);
 
         /*避免污染后面的*/
-        for (let i = level + 1; i < loadIndicator.levelMap.size; i++) {
+        for (let i = level + 1; i < loadIndicator.levelMap.size+1; i++) {
             loadIndicator.levelMap.set(i, 1);
         }
 
