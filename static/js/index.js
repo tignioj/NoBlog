@@ -1,6 +1,8 @@
 //TODO
 // 1. 指示器指向当前浏览的位置
 // 2. 目录只显示H1, 其余的当浏览到该位置时再显示
+// 3. 解决点击标题却调转到子标题的bug
+
 
 
 /**
@@ -31,6 +33,8 @@ function loadDoc(str) {
     let markedHtml = markdownParse(str);
     document.getElementById("content").innerHTML = markedHtml;
     loadIndicator()
+
+
 }
 
 

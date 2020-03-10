@@ -267,14 +267,6 @@ function parseLine(singleLine) {
     if (singleLine === undefined || singleLine === null) {
         return "";
     }
-    // let index = singleLine.indexOf("#");
-    // if (index !== -1) {
-    //     singleLine = parseHeader(singleLine);
-    // }
-    // let headerReg = /^\s*#/g;
-    // if (headerReg.test(singleLine)) {
-    //     singleLine = parseHeader(singleLine);
-    // }
 
     //标题#
     let headerReg = /^\s*#/g;
@@ -339,7 +331,7 @@ function parseLine(singleLine) {
         singleLine = "<p class='unordered-list'>" + retractEle + singleLine.substring(spaceLen + 1) + "</p>";
     }
     // singleLine = singleLine.replace(/(\\\-|\\\+|\\\*)/g, "$1");
-    singleLine = singleLine.replace(/\\(\-|\+|\*)/g, "$1");
+    singleLine = singleLine.replace(/\\(\-)/g, "$1");
 
     //TODO 有序列表
     // let orderedListReg = /^\s*\?-(?!-)/g;

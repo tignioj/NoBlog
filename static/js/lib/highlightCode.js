@@ -21,7 +21,6 @@ let isStartMultiLineHtmlComment = false;
 function highlightCode(rawCode, language) {
 
     //代码缩进把空格替换成 &nbsp;
-    //TODO 显示空格
 
     // rawCode = rawCode.replace(/ /g, "&nbsp;")
     // singleCodeLine = singleCodeLine.replace(/ /g, "&nbsp;&nbsp;")
@@ -57,6 +56,7 @@ function highlightCode(rawCode, language) {
         const keywords = [
             /*关键字*/
             "primary", "foreign", "not", "null", "references",
+            "index",
             /*DQL | DML */
             "select", "delete", "update", "insert",
             "from", "into", "on",
@@ -66,6 +66,9 @@ function highlightCode(rawCode, language) {
 
             /*DDL 数据操定义语言*/
             "create", "alter", "drop",
+
+            /*常用对象*/
+            "date", "timestamp",
 
 
             /*其它*/
@@ -95,9 +98,9 @@ function highlightCode(rawCode, language) {
             nCode = nCode.replace(commentReg, "<span class='hl-code-one-line-comment'>$1$2</span>")
         }
 
-        nCode =  starTypeCommentSpliter(nCode, keywords);
+        nCode = starTypeCommentSpliter(nCode, keywords);
 
-        return indentEle +  nCode;
+        return indentEle + nCode;
     }
 
 
@@ -557,7 +560,7 @@ function highlightCode(rawCode, language) {
                 //检测前面是否有注释
                 if (/--&gt;/g.test(nCode)) {
                     let index = nCode.indexOf("--&gt;");
-                    beforeComment = "<span class='hl-code-html-comment'>" +  nCode.substring(0, index + 6) + "</span>";
+                    beforeComment = "<span class='hl-code-html-comment'>" + nCode.substring(0, index + 6) + "</span>";
                     nCode = nCode.substring(index + 6);
                 }
 
@@ -691,7 +694,6 @@ function highlightCode(rawCode, language) {
         // }
 
 
-        //TODO 处理复杂html注释
         /**
          * 比如
          * <!--注释1--> <a>不是注释</a> <!--注释2--> <a>不是注释</a>
@@ -846,7 +848,6 @@ function highlightCode(rawCode, language) {
 
         let nCode = escapeCode(rawCode.trim(), false);
 
-        //TODO 高亮注释
         //单行注释
         nCode = highlightDoubleSlashComment(nCode);
 
