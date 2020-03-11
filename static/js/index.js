@@ -4,7 +4,6 @@
 // 3. 解决点击标题却调转到子标题的bug
 
 
-
 /**
  * Markdown 解析器
  * 支持列表如下
@@ -130,7 +129,7 @@ function loadIndicator() {
         loadIndicator.levelMap.set(level, levelCount + 1);
 
         /*避免污染后面的*/
-        for (let i = level + 1; i < loadIndicator.levelMap.size+1; i++) {
+        for (let i = level + 1; i < loadIndicator.levelMap.size + 1; i++) {
             loadIndicator.levelMap.set(i, 1);
         }
 
@@ -168,9 +167,9 @@ document.getElementById("back-to-top-btn").addEventListener("click", function ()
 
 /**
  * 获取当前可见区域内，距离屏幕顶部最近的元素
- * @param currentPageYOffset
  */
-function getCurrentScrollElement(currentPageYOffset) {
+function getCurrentScrollElement() {
+    let currentPageYOffset = window.pageYOffset;
     let headers = document.getElementsByClassName("header");
     let currentIndex = 0;
     for (let i = currentIndex; i < headers.length; i++) {
@@ -180,9 +179,9 @@ function getCurrentScrollElement(currentPageYOffset) {
             currentIndex++;
         }
     }
-    getCurrentScrollElement.preElement = document.getElementsByClassName("md-indicator-line")[currentIndex-1];
+    getCurrentScrollElement.preElement = document.getElementsByClassName("md-indicator-line")[currentIndex - 1];
     let headersInIndicator = document.getElementsByClassName("md-indicator-line");
-    return headersInIndicator[currentIndex-1];
+    return headersInIndicator[currentIndex - 1];
 }
 
 /**
@@ -211,10 +210,13 @@ window.onscroll = function () {
      *
      */
     let pE = getCurrentScrollElement.preElement === undefined ? document.getElementsByClassName("md-indicator-line")[0] : getCurrentScrollElement.preElement;
-    pE.style.backgroundColor = "transparent";
-    let currentElement = getCurrentScrollElement(window.pageYOffset);
+    // pE.style.backgroundColor = "transparent";
+    pE.classList.remove("md-indicator-line-active");
+    let currentElement = getCurrentScrollElement();
     // console.log(pE.innerText + "-->" + currentElement.innerText);
-    currentElement.style.backgroundColor = "darkgrey";
+    // currentElement.style.backgroundColor = "darkgrey";
+    // currentElement.style.backgroundColor = "darkgrey";
+    currentElement.classList.add("md-indicator-line-active")
 };
 
 
@@ -223,22 +225,42 @@ function jumpTo(element) {
     element.scrollIntoView();
 }
 
+function contentAdjust() {
+    let con = document.getElementById("content");
+    if (!contentAdjust.isCenter) {
+        con.style.left = "0";
+    } else {
+        //内容居中
+        con.style.left = (document.body.offsetWidth - con.clientWidth) / 2 + 'px';
+    }
+}
+
+
+window.onresize = function () {
+    contentAdjust()
+}
+
 
 /*目录折叠*/
 function toggleCatalog(button) {
     let indicator = document.getElementById("indicator");
 
-
     //当PC为""或"none"时成立
     //ele.style.XX 此方法获取的是内联样式表，因此初次获取时手机和电脑端都为"", 所以应该要获取外联样式表window.getComputedStyle(element,pseudoElement).XXX
     // let display = indicator.style.display;
     let display = window.getComputedStyle(indicator, null).display;
+
     if (display === "none") {
         indicator.style.display = "block";
+        contentAdjust.isCenter = false;
+        contentAdjust();
     } else {
         indicator.style.display = "none";
+        contentAdjust.isCenter = true;
+        contentAdjust(true);
     }
     // indicator.style.display = (display === ("" || "none")) ? "block" : "none";
+
 
     button.style.transform = "-webkit-transform 500ms ease-in-out";
     if (button.innerText === "+") {
@@ -249,5 +271,6 @@ function toggleCatalog(button) {
         button.style.transform = "rotate(0deg)";
         button.style.transform = "translateX(0)";
     }
+
 }
 

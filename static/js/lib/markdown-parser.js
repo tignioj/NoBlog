@@ -254,6 +254,7 @@ function parseQuote(arr) {
     let quoteParse = new QuoteParser(arr);
     return quoteParse.getQuoteEle();
 }
+
 //多行解析路由============================结束
 
 
@@ -276,7 +277,7 @@ function parseLine(singleLine) {
             sharpLen = 6;
         }
         // let sstr = "<h" + sharpLen + " class='header header-" + sharpLen+ "'>" + singleLine.replace(/^\s*#*(.*)/g, "$1") + "</h" + sharpLen+ ">";
-        singleLine = "<h" + sharpLen + " class='header header-" + sharpLen+ "'>" + singleLine.trim().substring(sharpLen) + "</h" + sharpLen+ ">";
+        singleLine = "<h" + sharpLen + " class='header header-" + sharpLen + "'>" + singleLine.trim().substring(sharpLen) + "</h" + sharpLen + ">";
     }
     //转义
     singleLine = singleLine.replace(/\\#/g, "#");
@@ -514,16 +515,21 @@ function parseLine(singleLine) {
      * 组合1 | 组合2  = 要求
      * @type {RegExp}
      */
-        // let regSingleCode = /(^|[^\\])(`[^\s]`)|(`([^ ])([^`]*?)([^ ])`)/g;
-    let regSingleCode = /(^|[^\\])(`[^\s]`)|(^|[^\\])(`([^ ])([^`]*?)([^ ])`)/g;
+
+    let regSingleCode = /(^|[^\\])(`[^\s]`)|(^|[^\\])(`([^\s])([^`]*?)([^\s])`)/g;
     if (singleLine.trim().match(regSingleCode) != null) {
         // singleLine = parseMultiLineArr([singleLine], false);
         // singleLine = singleLine.replace(regSingleCode, "$1<span class='code code-single-frame'>$2$3$4</span>")
         singleLine = singleLine.replace(regSingleCode, function (ch) {
             //第一个符号被捕获了，需要切割出来, 比如 "test`echo hello`"，其中会拿到 "t`echo hello`, 前面的t就是我们需要单独提取的内容。
-            ch = ch.replace(/`(.*)`/g, "$1");
-            let firstChar = ch.substring(0, 1);
-            ch = ch.substring(1);
+            let firstChar = ch.charAt(0);
+            ch = ch.replace(/``?(.*)`/g, "$1");
+
+            //如果是`开头的，就不会获取到第一个字符
+            if (firstChar !== "`") {
+                ch = ch.substring(1);
+            }
+
             ch = escapeCode(ch, false);
             ch = highlightCode(ch, "singleline");
             // return "<span class='code code-single-frame'>" + escapeCode(ch, false) + "</span>";
@@ -531,6 +537,8 @@ function parseLine(singleLine) {
         });
         // singleLine = singleLine.replace(/\\`/g, "`");
     }
+
+
     singleLine = singleLine.replace(/\\`/g, "`");
 
 
@@ -556,8 +564,8 @@ function parseLine(singleLine) {
     }
     return singleLine;
 }
-//单行解析============================结束
 
+//单行解析============================结束
 
 
 function toggle(element) {

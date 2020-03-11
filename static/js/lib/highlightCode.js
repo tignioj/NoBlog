@@ -293,7 +293,7 @@ function highlightCode(rawCode, language) {
                 //高亮数字
                 //\b表示非字母数字与字母数字的边界。
                 //由于'会被转义成&#39, 我们不能高亮这个数字，否则会将&#39分割成 &#<span...>39</span> 网页就无法正确显示了
-                let numberReg = /([^#])\b(\d+)\b/g;
+                let numberReg = /([^#]|^)\b(\d+)\b/g;
                 nCode = nCode.replace(numberReg, "$1<span class='hl-code-number'>$2</span>");
 
 

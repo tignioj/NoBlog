@@ -134,10 +134,13 @@
     padding: 5px;
 }
 
+
+
 /* 目录中高亮当前位置 */
 .md-indicator-line-active {
-    background-color: red;
+    background-color: grey;
 }
+
 
 /*代码框上面的横条*/
 .md-indicator-bar {

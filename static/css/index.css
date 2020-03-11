@@ -8,13 +8,13 @@ body {
 #app {
     /*background-color: ghostwhite;*/
     /*border: 1px solid red;*/
-
     /*居中技巧*/
     max-width: 10000px;
     margin: auto;
 }
 
 #content {
+    position: relative;
     padding: 10px;
     float: left;
 }
@@ -71,6 +71,9 @@ body {
     /*居中技巧--结束*/
     /*filter: drop-shadow(1px 0px 0rem rgb(0,0,0));*/
 }
+
+
+
 
 /*!*当屏幕段都大于1024执行的css*!*/
 @media only screen and (min-width: 1024px) {
