@@ -1,7 +1,7 @@
 /**
  * 高亮代码
- * 原理：封装css
- * @param rawCode 未高亮的代码
+ * 原理：给一行代码, 按关键字进行高亮
+ * @param rawCode 未高亮的一行代码
  * @param language 语言
  */
 

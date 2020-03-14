@@ -8,7 +8,6 @@ function markdownParse(str) {
     let arry = str.split("\n");
     let html = "";
     let singleLine = "";
-
     /**
      * 封装代码块
      * @param currentIndex
@@ -305,7 +304,7 @@ function parseLine(singleLine) {
      * @type {RegExp}
      */
         // let unOrderedListReg = /^\s*([-*+])(?!\1)/g;
-    let unOrderedListReg = /^\s*([-*+])(?!\1)/g;
+    let unOrderedListReg = /^\s*([-*+])\s(?!\1)/g;
     if (unOrderedListReg.test(singleLine)) {
         //判断前面是否有转义符号
         // let styles = ["\t&#8226;",  "\t&#9830;","\t&#9674;"]
@@ -471,7 +470,7 @@ function parseLine(singleLine) {
     singleLine = singleLine.replace(/(\\\*)/g, "*");
 
 
-    let delReg = /([^\\])~~(.*?)~~/g;
+    let delReg = /(^|[^\\])~~(.*?)~~/g;
     if (delReg.test(singleLine)) {
         singleLine = singleLine.replace(delReg, "$1<span class='md-del'>$2</span>");
 

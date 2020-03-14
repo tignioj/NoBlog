@@ -13,9 +13,9 @@
  *      4.
  * @param mdText
  */
-
-window.onload = function () {
+window.addEventListener('load', function () {
     let md = "./posts/1.md";
+    // let md = "./posts/4.md";
     // let md = "./posts/empty.md";
     // let md = "./posts/poem.md";
     // let md = "./posts/blocktest.md";
@@ -23,17 +23,13 @@ window.onload = function () {
     // var md = "./posts/3.md";
     // var md = "./posts/post.md";
     loadFileString(md, loadDoc);
-
-
-};
+});
 
 
 function loadDoc(str) {
     let markedHtml = markdownParse(str);
     document.getElementById("content").innerHTML = markedHtml;
     loadIndicator()
-
-
 }
 
 
@@ -151,8 +147,6 @@ function loadIndicator() {
         // indicatorWraperEle.appendChild(br);
     }
     indicator.appendChild(indicatorWraperEle);
-
-
 }
 
 /**
@@ -235,10 +229,9 @@ function contentAdjust() {
     }
 }
 
-
 window.onresize = function () {
     contentAdjust()
-}
+};
 
 
 /*目录折叠*/
