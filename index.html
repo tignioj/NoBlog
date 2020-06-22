@@ -2,6 +2,7 @@
 <html lang="en" xmlns:javascript="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Index</title>
     <style>
         #app {
@@ -24,26 +25,21 @@
             /*border: 1px solid black;*/
             margin: 40px 0;
             padding:  10px 0;
-
         }
 
         .article > .title:hover {
             /*box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);*/
-
-        }
-
-        .article > .link {
-            visibility: hidden;
         }
 
         .article > .title {
             margin-top: 0;
             font-weight: bold;
-            color: #2b2b2b;
             margin-bottom: 30px;
         }
         .article > .title  > a {
             border-bottom: 2px solid transparent;
+            text-decoration: none;
+            color: black;
             cursor: pointer;
             transition-duration: 200ms;
         }
@@ -73,8 +69,6 @@
     </div>
 </div>
 <script>
-
-
     window.addEventListener('load', function (e) {
         let xhr = new XMLHttpRequest();
         xhr.open('GET', 'posts.json');
@@ -106,7 +100,6 @@
                         newArr.push(arr[i]);
                     }
                 }
-
                 loadDocumentByArray(newArr);
             } else {
                 loadDocumentByArray(arr);
@@ -138,14 +131,14 @@
             createDate.appendChild(document.createTextNode(obj.create_time));
             title_a_span.appendChild(document.createTextNode(obj.title));
             title_a.appendChild(title_a_span)
+            title_a.setAttribute('href',  "./article.html?id=" + obj.id);
+
+
             title.appendChild(title_a);
             div.appendChild(createDate);
             div.appendChild(title);
             div.appendChild(summary);
             div.classList.add("article");
-            div.addEventListener('click', function () {
-                location.href = "./article.html?id=" + obj.id;
-            });
             document.getElementById("articles").appendChild(div);
         }
     }

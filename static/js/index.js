@@ -41,16 +41,6 @@ window.addEventListener('load', function () {
     if (articleInfo.status === -1) {
         document.write(articleInfo.info);
     } else {
-        // let md = "./posts/1.md";
-        // let md = "./posts/r.md";
-        // let md = "./posts/4.md";
-        // let md = "./posts/empty.md";
-        // let md = "./posts/poem.md";
-        // let md = "./posts/blocktest.md";
-        // var md = "./posts/2.md";
-        // var md = "./posts/3.md";
-        // var md = "./posts/post.md";
-        // loadFileString(md, loadDoc);
         loadFileString(articleInfo.location + articleInfo.info.name, loadDoc);
     }
 });
@@ -112,9 +102,11 @@ function loadIndicator() {
     let toggleBtn = document.createElement("span");
     toggleBtn.classList.add("md-indicator-btn");
     toggleBtn.innerText = "+";
+
+    toggleBtn.id = "toggleBtn";
     //点击按钮时，调用方法隐藏/显示按钮
     toggleBtn.addEventListener('click', function () {
-        toggleCatalog(this, this.parentElement.nextSibling);
+        toggleCatalog();
     });
     // toggleBtn.onclick =  toggleCatalog;
     catalogEle.appendChild(toggleBtn);
@@ -177,6 +169,7 @@ function loadIndicator() {
         // indicatorWraperEle.appendChild(br);
     }
     indicator.appendChild(indicatorWraperEle);
+    toggleCatalog(false)
 }
 
 /**
@@ -249,42 +242,56 @@ function jumpTo(element) {
     element.scrollIntoView();
 }
 
-function contentAdjust() {
-    let con = document.getElementById("content");
-    if (!contentAdjust.isCenter) {
-        con.style.left = "0";
-    } else {
-        //内容居中
-        con.style.left = (document.body.offsetWidth - con.clientWidth) / 2 + 'px';
-    }
-}
+
 
 window.onresize = function () {
-    contentAdjust()
+    let con = document.getElementById("content");
+    console.log(window.isShowCatalog);
+    if (window.isShowCatalog === false) {
+        con.style.left = (document.body.offsetWidth - con.clientWidth) / 2 + 'px';
+    } else {
+        con.style.left = "0";
+    }
 };
 
 
 /*目录折叠*/
-function toggleCatalog(button) {
+function toggleCatalog(isShow) {
+
     let indicator = document.getElementById("indicator");
 
     //当PC为""或"none"时成立
     //ele.style.XX 此方法获取的是内联样式表，因此初次获取时手机和电脑端都为"", 所以应该要获取外联样式表window.getComputedStyle(element,pseudoElement).XXX
     // let display = indicator.style.display;
     let display = window.getComputedStyle(indicator, null).display;
+    let con = document.getElementById("content");
 
-    if (display === "none") {
-        indicator.style.display = "block";
-        contentAdjust.isCenter = false;
-        contentAdjust();
+    if (isShow == null) {
+        if (display === "none") {
+            //说明需要打开
+            indicator.style.display = "block";
+            con.style.left = "0";
+            window.isShowCatalog = true;
+            console.log("show")
+        } else {
+            //说明需要关闭
+            indicator.style.display = "none";
+            con.style.left = (document.body.offsetWidth - con.clientWidth) / 2 + 'px';
+            window.isShowCatalog = false;
+            console.log("hide")
+        }
     } else {
-        indicator.style.display = "none";
-        contentAdjust.isCenter = true;
-        contentAdjust(true);
+        window.isShowCatalog = isShow;
+        if (isShow) {
+            indicator.style.display = "block";
+            con.style.left = "0";
+        }else {
+            indicator.style.display = "none";
+            con.style.left = (document.body.offsetWidth - con.clientWidth) / 2 + 'px';
+        }
     }
+    let button = document.getElementById("toggleBtn")
     // indicator.style.display = (display === ("" || "none")) ? "block" : "none";
-
-
     button.style.transform = "-webkit-transform 500ms ease-in-out";
     if (button.innerText === "+") {
         button.innerText = "-";
