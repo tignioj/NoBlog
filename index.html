@@ -162,7 +162,7 @@
 
 
     window.addEventListener('load', function (e) {
-        let xhr = new XMLHttpRequest();
+        let xhr = getXMLHttp();
         xhr.open('GET', 'posts.json');
         xhr.send(null);
         xhr.onreadystatechange = function () {
