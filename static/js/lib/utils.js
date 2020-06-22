@@ -32,13 +32,13 @@ function ajaxLoadError() {
  * 获取文件的字符串
  * @returns {string}
  */
-function loadFileString(url, callback) {
+function loadFileString(url, success, err) {
     let xhr = getXMLHttp();
     xhr.open("GET", url);
     xhr.send();
     xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {
-            callback(xhr.responseText);
+            success(xhr.responseText);
         }
     }
 }

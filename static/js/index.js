@@ -41,11 +41,18 @@ window.addEventListener('load', function () {
     if (articleInfo.status === -1) {
         document.write(articleInfo.info);
     } else {
-        loadFileString(articleInfo.location + articleInfo.info.name, loadDoc);
+        loadFileString(
+            articleInfo.location + articleInfo.info.name,
+            loadDoc, err);
     }
 });
 
-
+function err(errObj) {
+    switch (errObj.status) {
+        case -1 :
+            document.write(errObj.info);
+    }
+}
 function loadDoc(str) {
     let markedHtml = markdownParse(str);
     document.getElementById("content").innerHTML = markedHtml;
