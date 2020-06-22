@@ -1,0 +1,158 @@
+body {
+    /*background-color: #E8EAF6;*/
+    font-family: "微软雅黑", Roboto, Noto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+}
+
+/*markdonw解析后显示的地方*/
+#app {
+    /*background-color: ghostwhite;*/
+    /*border: 1px solid red;*/
+    /*居中技巧*/
+    max-width: 10000px;
+    margin: auto;
+}
+
+#content {
+    position: relative;
+    padding: 10px;
+    float: left;
+}
+
+
+/*代码框上面的横条*/
+.md-code-bar {
+    /*border-radius: 0.5em;*/
+    /*background-color: black;*/
+    /*border-bottom: 1px solid rgba(0, 0, 0, 0.57);*/
+    position: relative;
+    height: 25px;
+}
+
+/*折叠代码的按钮*/
+.md-code-fold {
+    cursor: pointer;
+    right: 6px;
+    line-height: 0;
+    top: 12px;
+    border-radius: 100%;
+    border: 0;
+    position: absolute;
+    background-color: transparent;
+    /*background-color: darkslategray;*/
+    font-weight: bolder;
+    /*color: #bababa;*/
+    color: darkgray;
+    font-size: xx-large;
+    user-select: none;
+}
+
+.md-code-fold:hover {
+    transition-duration: 100ms;
+    /*background-color: darkgoldenrod;*/
+}
+
+/*回到顶部*/
+#back-to-top-btn {
+    position: fixed;
+    bottom: -90px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+}
+/*回到顶部下的图标*/
+#back-to-top-btn img{
+    /*居中技巧--开始*/
+    top: 50%;
+    position: relative;
+    display: block;
+    margin: 0 auto;
+    transform: translateY(-50%);
+    /*居中技巧--结束*/
+    /*filter: drop-shadow(1px 0px 0rem rgb(0,0,0));*/
+}
+
+
+
+/*!*当屏幕段都大于1024执行的css*!*/
+@media only screen and (min-width: 1024px) {
+    /*markdown区域*/
+    #content {
+        /*background-color: #fa6125;*/
+        /*border: 1px solid red;*/
+        /*border-radius: 0.5em;*/
+    }
+
+    #indicator {
+        max-width: 30%;
+    }
+}
+
+/* For desktop: */
+.col-1 {
+    width: 8.33%;
+}
+
+.col-2 {
+    width: 16.66%;
+}
+
+.col-3 {
+    width: 25%;
+}
+
+.col-4 {
+    width: 33.33%;
+}
+
+.col-5 {
+    width: 41.66%;
+}
+
+.col-6 {
+    width: 50%;
+}
+
+.col-7 {
+    width: 58.33%;
+}
+
+.col-8 {
+    width: 66.66%;
+}
+
+.col-9 {
+    width: 75%;
+}
+
+.col-10 {
+    width: 83.33%;
+}
+
+.col-11 {
+    width: 91.66%;
+}
+
+.col-12 {
+    width: 100%;
+}
+
+@media only screen and (max-width: 768px) {
+    /* For mobile phones: */
+    /*[class*="col-"] {*/
+    /*    width: 100%;*/
+    /*}*/
+    #content {
+        width: 90%;
+    }
+
+
+
+    #indicator {
+        background-color: rgba(0, 0, 0, 0.83);
+        color: #ffffff;
+        display: none;
+        width: 100%;
+        max-width: 100%;
+    }
+}
