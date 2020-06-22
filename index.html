@@ -14,8 +14,9 @@
             width: 40px;
             height: 40px;
         }
+
         /*回到顶部下的图标*/
-        #back-to-top-btn img{
+        #back-to-top-btn img {
             /*居中技巧--开始*/
             top: 50%;
             position: relative;
@@ -62,6 +63,12 @@
             transform: translateX(-50%) translateY(-50%);
         }
 
+        #header-img-loading {
+            bottom: 30px;
+            text-align: center;
+            position: absolute;
+            padding-left: 48px;
+        }
         /*!*当屏幕段都大于1024执行的css*!*/
         @media only screen and (min-width: 1024px) {
 
@@ -128,7 +135,8 @@
     <!--    <img src="https://wzka.ml:2053/wp-content/themes/twentyseventeen/assets/images/header.jpg" width="2000" height="1200" alt="Tignioj's blog">-->
     <!--    <img src="./static/images/bg/bg.jpg" width="2000" height="1200" alt="Tignioj's blog">-->
     <!--    <img src="./static/images/bg/a304bfc6559888d2a5f1a1eacd15e9a7.jpg" width="2000" height="1200" alt="background">-->
-    <img src="./static/images/bg/bg.jpg" width="2000" height="1200" alt="background">
+    <p id="header-img-loading">背景图片加载中..</p>
+    <img id="header-img" data-src="./static/images/bg/bg.jpg" width="2000" height="1200" alt="背景图片">
     <h1>WELCOME</h1>
 </div>
 <div id="app">
@@ -145,12 +153,14 @@
     </div>
 
     <!-- 回到顶部-->
-    <a id="back-to-top-btn" href="javascript:;" ><img alt="回到顶部" src="./static/images/icon/up_arrow.png"/></a>
+    <a id="back-to-top-btn" href="javascript:;"><img alt="回到顶部" src="./static/images/icon/up_arrow.png"/></a>
 </div>
 
 <!--工具类-->
 <script src="./static/js/lib/utils.js"></script>
 <script>
+
+
     window.addEventListener('load', function (e) {
         let xhr = new XMLHttpRequest();
         xhr.open('GET', 'posts.json');
@@ -175,12 +185,37 @@
         });
 
 
-
         initsearch();
-        scrollToLastTime()
+        scrollToLastTime();
+
+        function loadImage(obj, url, callback) {
+            var img = new Image();
+            img.src = url;
+
+            // 判断图片是否在缓存中
+            if (img.complete) {
+                callback.call(img, obj);
+                return;
+            }
+
+            // 图片加载到浏览器的缓存中回调函数
+            img.onload = function () {
+                let loadingEle = document.getElementById("header-img-loading");
+                loadingEle.parentElement.removeChild(loadingEle);
+                callback.call(img, obj);
+            }
+        }
+
+        function showImage(obj) {
+            obj.src = this.src;
+        }
+
+        // HTMLElement.dataset属性允许在读取模式和写入模式下
+        // 访问在HTML或DOM中的元素上设置多有的自定义数据属性（data - *）集
+        let img = document.getElementById("header-img");
+        let url = document.getElementById("header-img").dataset.src;
+        loadImage(img, url, showImage);
     });
-
-
 
 
     function initsearch() {
@@ -254,7 +289,7 @@
             title_a.setAttribute('href', "./article.html?id=" + obj.id);
             //记住当前位置
             title_a.addEventListener('click', function () {
-                sessionStorage.setItem('lastTimeScroll', window.pageYOffset+"");
+                sessionStorage.setItem('lastTimeScroll', window.pageYOffset + "");
             })
 
 
@@ -273,6 +308,7 @@
         } else {
             document.getElementById("articles").innerHTML = "你好像还没有文章哦"
         }
+
     }
 </script>
 </body>
