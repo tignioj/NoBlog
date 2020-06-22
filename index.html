@@ -1,33 +1,162 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:javascript="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>首页</title>
-    <link type="text/css" rel="stylesheet" href="./static/css/markdown-parser.css"/>
-    <link type="text/css" rel="stylesheet" href="./static/css/index.css"/>
-    <link type="text/css" rel="stylesheet" href="./static/css/highlight-darcular.css"/>
+    <title>Index</title>
     <style>
+        #app {
+            padding: 10px;
+            margin: 20px;
+            /*font-family: "PingFang SC", "Helvetica Neue", Helvetica, STHeitiSC-Light, Arial, sans-serif;*/
+            font-family: "微软雅黑", Roboto, Noto, Helvetica, Arial, sans-serif;
+        }
+
+
+        #header {
+            margin: 10px 0;
+        }
+
+        #loading {
+            margin: 10px 0;
+        }
+
+        .article {
+            /*border: 1px solid black;*/
+            margin: 40px 0;
+            padding:  10px 0;
+
+        }
+
+        .article > .title:hover {
+            /*box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);*/
+
+        }
+
+        .article > .link {
+            visibility: hidden;
+        }
+
+        .article > .title {
+            margin-top: 0;
+            font-weight: bold;
+            color: #2b2b2b;
+            margin-bottom: 30px;
+        }
+        .article > .title  > a {
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition-duration: 200ms;
+        }
+        .article > .title  > a:hover {
+            border-bottom: 2px solid black;
+        }
+
+
     </style>
 </head>
 <body>
-
 <div id="app">
-    <div id="content" class="col-8"></div>
-    <div id="indicator" class="col-4"></div>
-    <!-- 回到顶部-->
-    <a id="back-to-top-btn" href="javascript:;" ><img alt="回到顶部" src="./static/images/icon/up_arrow.png"/></a>
+    <div id="header">
+        <div id="welcome">
+            <h1>欢迎来到寒舍
+            </h1>
+        </div>
+        <div id="search">
+            <input id="searchInput" placeholder="输入文章内容或标题"/>
+            <button id="searchButton">搜索</button>
+        </div>
+    </div>
+    <div id="articles">
+        <div id="loading">
+            文章加载中...
+        </div>
+    </div>
 </div>
+<script>
 
-<!--实体类-->
-<script src="static/js/lib/multiLineParser.js"></script>
 
-<!--工具类-->
-<script src="./static/js/lib/utils.js"></script>
+    window.addEventListener('load', function (e) {
+        let xhr = new XMLHttpRequest();
+        xhr.open('GET', 'posts.json');
+        xhr.send(null);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                let loadingEle = document.getElementById("loading");
+                loadingEle.parentElement.removeChild(loadingEle);
+                window.articles = JSON.parse(xhr.responseText)
+                loadDocuments(window.articles);
+            } else {
+                document.getElementById("loading").innerText = "网络出错了.."
+            }
+        }
+        initsearch();
+    });
 
-<!--依赖库-->
-<script src="./static/js/lib/highlightCode.js"></script>
-<script src="./static/js/lib/markdown-parser.js"></script>
-<script src="./static/js/index.js"></script>
+    function initsearch() {
+        let searchInput = document.getElementById("searchInput");
+        searchInput.addEventListener('keyup', function (e) {
+            document.getElementById("articles").innerHTML = "";
+            let arr = window.articles.articles.list;
+            let value = searchInput.value;
+            console.log(value);
+            let newArr = [];
+            if (value.trim().length > 0) {
+                for (let i = 0; i < arr.length; i++) {
+                    if (arr[i].title.indexOf(value) !== -1 || arr[i].summary.indexOf(value) !== -1) {
+                        newArr.push(arr[i]);
+                    }
+                }
+
+                loadDocumentByArray(newArr);
+            } else {
+                loadDocumentByArray(arr);
+            }
+        })
+    }
+
+
+    /**
+     * 加载文章数组
+     * @param arr
+     */
+    function loadDocumentByArray(arr) {
+        for (let i = 0; i < arr.length; i++) {
+            let obj = arr[i];
+            let div = document.createElement("div");
+
+            let title = document.createElement("h1");
+            let title_a = document.createElement("a");
+            let title_a_span = document.createElement("span");
+
+            title.classList.add("title");
+            let createDate = document.createElement("span");
+            createDate.classList.add("create_date")
+            let summary = document.createElement("p");
+            summary.classList.add("summary")
+
+            summary.appendChild(document.createTextNode(obj.summary));
+            createDate.appendChild(document.createTextNode(obj.create_time));
+            title_a_span.appendChild(document.createTextNode(obj.title));
+            title_a.appendChild(title_a_span)
+            title.appendChild(title_a);
+            div.appendChild(createDate);
+            div.appendChild(title);
+            div.appendChild(summary);
+            div.classList.add("article");
+            div.addEventListener('click', function () {
+                location.href = "./article.html?id=" + obj.id;
+            });
+            document.getElementById("articles").appendChild(div);
+        }
+    }
+
+    function loadDocuments(jsonObj) {
+        if (jsonObj.articles.list.length > 0) {
+            loadDocumentByArray(jsonObj.articles.list)
+        } else {
+            document.getElementById("articles").innerHTML = "你好像还没有文章哦"
+        }
+    }
+</script>
 </body>
 </html>

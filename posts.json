@@ -1,0 +1,31 @@
+{
+  "articles": {
+    "posts_location": "./posts/",
+    "count": 1,
+    "list": [
+      {
+        "id": "1",
+        "create_time": "2020-6-22",
+        "name": "1.md",
+        "title": "标题测试",
+        "summary": "测试...",
+        "tag": [
+          "测试"
+        ],
+        "category": "测试分类"
+      },
+      {
+        "id": "2",
+        "create_time": "2020-6-22",
+        "name": "FreePlane的一些简单介绍以及使用-强大的思维导图软件.md",
+        "title": "FreePlane的一些简单介绍以及使用-强大的思维导图软件",
+        "summary": "FreePlane是FreeMind的一个社区版本，对比了XMind, MindMaster, MindManager, 各有利弊",
+        "tag": [
+          "FreeMind",
+          "思维导图"
+        ],
+        "category": "思维导图"
+      }
+    ]
+  }
+}

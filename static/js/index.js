@@ -3,6 +3,29 @@
 // 2. 目录只显示H1, 其余的当浏览到该位置时再显示
 // 3. 解决点击标题却调转到子标题的bug
 
+function getArticleInfo() {
+    let id = getQueryVariable("id");
+    let xmlHttp = getXMLHttp();
+    xmlHttp.open("GET", './posts.json', false);
+    xmlHttp.send(null);
+    let response = xmlHttp.responseText;
+    if (response != null) {
+        let articlesObj = JSON.parse(response);
+        let list = articlesObj.articles.list;
+        let postsLocation = articlesObj.articles.posts_location;
+        if (list != null) {
+            if (list.length > 0) {
+                for (let i = 0; i < list.length; i++) {
+                    let articleObj = list[i];
+                    if (articleObj.id === id) {
+                        return {status: 1, info: articleObj, location: postsLocation};
+                    }
+                }
+            }
+        }
+    }
+    return {status: -1, info: "未找到id为'" + id + "'的文章"};
+}
 
 /**
  * Markdown 解析器
@@ -14,15 +37,22 @@
  * @param mdText
  */
 window.addEventListener('load', function () {
-    let md = "./posts/1.md";
-    // let md = "./posts/4.md";
-    // let md = "./posts/empty.md";
-    // let md = "./posts/poem.md";
-    // let md = "./posts/blocktest.md";
-    // var md = "./posts/2.md";
-    // var md = "./posts/3.md";
-    // var md = "./posts/post.md";
-    loadFileString(md, loadDoc);
+    let articleInfo = getArticleInfo();
+    if (articleInfo.status === -1) {
+        document.write(articleInfo.info);
+    } else {
+        // let md = "./posts/1.md";
+        // let md = "./posts/r.md";
+        // let md = "./posts/4.md";
+        // let md = "./posts/empty.md";
+        // let md = "./posts/poem.md";
+        // let md = "./posts/blocktest.md";
+        // var md = "./posts/2.md";
+        // var md = "./posts/3.md";
+        // var md = "./posts/post.md";
+        // loadFileString(md, loadDoc);
+        loadFileString(articleInfo.location + articleInfo.info.name, loadDoc);
+    }
 });
 
 
