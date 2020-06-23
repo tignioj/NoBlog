@@ -53,10 +53,20 @@ function err(errObj) {
             document.write(errObj.info);
     }
 }
+
 function loadDoc(str) {
     let markedHtml = markdownParse(str);
     document.getElementById("content").innerHTML = markedHtml;
-    loadIndicator()
+    setTimeout(function () {
+        try {
+            MathJax.typeset();
+        } catch (err) {
+        } finally {
+            adjustContent();
+        }
+    }, 0)
+
+    loadIndicator();
 }
 
 
@@ -250,8 +260,11 @@ function jumpTo(element) {
 }
 
 
-
 window.onresize = function () {
+    adjustContent()
+};
+
+function adjustContent() {
     let con = document.getElementById("content");
     console.log(window.isShowCatalog);
     if (window.isShowCatalog === false) {
@@ -259,8 +272,7 @@ window.onresize = function () {
     } else {
         con.style.left = "0";
     }
-};
-
+}
 
 /*目录折叠*/
 function toggleCatalog(isShow) {
@@ -292,7 +304,7 @@ function toggleCatalog(isShow) {
         if (isShow) {
             indicator.style.display = "block";
             con.style.left = "0";
-        }else {
+        } else {
             indicator.style.display = "none";
             con.style.left = (document.body.offsetWidth - con.clientWidth) / 2 + 'px';
         }

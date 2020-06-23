@@ -8,6 +8,8 @@ window.addEventListener('load', function (e) {
             loadingEle.parentElement.removeChild(loadingEle);
             window.articles = JSON.parse(xhr.responseText)
             loadDocuments(window.articles);
+
+
         } else {
             document.getElementById("loading").innerText = "网络出错了.."
         }
@@ -119,6 +121,8 @@ function loadDocumentByArray(arr) {
 function loadDocuments(jsonObj) {
     if (jsonObj.articles.list.length > 0) {
         loadDocumentByArray(jsonObj.articles.list)
+
+
     } else {
         document.getElementById("articles").innerHTML = "你好像还没有文章哦"
     }
