@@ -1,6 +1,6 @@
 # A very simple blog
 ## preview
-[https://tignioj.github.io/NoBlog/](https://tignioj.github.io/NoBlog/)
+[http://blog.wszjl.top](http://blog.wszjl.top)
 # how to use it?
 ## usage1
 - clone master into your pc.
