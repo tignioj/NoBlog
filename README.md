@@ -1,4 +1,4 @@
-# A very ugly blog
+# A very simple blog
 ## preview
 [https://tignioj.github.io/NoBlog/](https://tignioj.github.io/NoBlog/)
 # how to use it?
