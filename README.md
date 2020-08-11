@@ -4,7 +4,7 @@
 # how to use it?
 ## usage1
 - clone master into your pc.
-- delete it.
+- you can using nginx to start the server
 - enjoy.
 ## usage2
 not yet.
